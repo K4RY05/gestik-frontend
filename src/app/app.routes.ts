@@ -5,7 +5,6 @@ export const routes: Routes = [
     path: 'login', 
     loadComponent: () => import('./auth/login/login').then(m => m.Login) 
   },
-  
   { 
     path: 'admin', 
     //canActivate: [authGuard, roleGuard], 
