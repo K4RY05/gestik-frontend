@@ -1,1 +1,32 @@
-<p>navbar works!</p>
+<nav class="navbar">
+  <!-- Lado izquierdo: Logo -->
+  <div class="nav-left">
+    <span class="logo-text">LOGO</span>
+  </div>
+
+  <!-- Centro: Sucursal -->
+  <div class="nav-center">
+    <div class="sucursal-container">
+      <i class="icon-store">📍</i>
+      <span class="sucursal-text">{{ sucursal }}</span>
+    </div>
+  </div>
+
+  <!-- Lado derecho: Usuario y Menú Desplegable -->
+  <div class="nav-right">
+    <div class="user-menu-container" (click)="toggleDropdown()">
+      <div class="user-info">
+        <i class="icon-user">👤</i>
+        <span class="username">{{ usuario }}</span>
+        <span class="arrow" [class.open]="isDropdownOpen">▼</span>
+      </div>
+
+      <!-- Menú desplegable -->
+      <div class="dropdown-menu" *ngIf="isDropdownOpen">
+        <button class="dropdown-item" (click)="logout()">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
