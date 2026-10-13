@@ -1,1 +1,60 @@
-<p>navbar works!</p>
+<header class="navbar-header">
+  <nav class="navbar-container">
+    
+    <!-- Lado izquierdo: Logo -->
+    <div class="nav-left">
+      <div class="logo-wrapper">
+        <span class="logo-text">LOGO</span>
+      </div>
+    </div>
+
+    <!-- Centro: Sucursal -->
+    <div class="nav-center">
+      <div class="sucursal-badge">
+        <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span class="sucursal-text">{{ sucursal }}</span>
+      </div>
+    </div>
+
+    <!-- Lado derecho: Usuario y Menú Desplegable -->
+    <div class="nav-right">
+      <div class="user-menu-wrapper" (click)="toggleDropdown($event)">
+        
+        <button class="user-trigger" [class.active]="isDropdownOpen" aria-label="Menú de usuario">
+          <div class="user-avatar">
+            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <span class="username">{{ usuario }}</span>
+          <svg class="arrow-icon" [class.open]="isDropdownOpen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Menú Desplegable Moderno -->
+        <div class="dropdown-menu" *ngIf="isDropdownOpen">
+          <div class="dropdown-header">
+            <span class="dropdown-user-label">Conectado como</span>
+            <span class="dropdown-user-name">{{ usuario }}</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item logout-item" (click)="logout()">
+            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </nav>
+</header>
