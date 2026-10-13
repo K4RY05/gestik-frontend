@@ -1,85 +1,210 @@
-.navbar {
+/* Contenedor Principal */
+.navbar-header {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 4px 20px -2px rgba(249, 115, 22, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.navbar-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f97316; /* Color naranja idéntico al diseño */
   padding: 0.75rem 2rem;
-  color: #ffffff;
-  font-family: sans-serif;
+  max-width: 1440px;
+  margin: 0 auto;
   position: relative;
 }
 
-.nav-left .logo-text {
-  font-weight: bold;
-  font-size: 1.25rem;
-  letter-spacing: 1px;
+/* Iconos generales */
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }
 
+/* Lado Izquierdo - Logo */
+.nav-left .logo-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  font-weight: 800;
+  font-size: 1.35rem;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Centro - Sucursal (Pastilla flotante) */
 .nav-center {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.sucursal-container {
+.sucursal-badge {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  padding: 0.45rem 1.1rem;
+  border-radius: 50px;
+  color: #ffffff;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.sucursal-badge .nav-icon {
+  stroke: #ffffff;
+}
+
+/* Lado Derecho - Usuario y Menú */
 .nav-right {
   position: relative;
 }
 
-.user-menu-container {
+.user-menu-wrapper {
   cursor: pointer;
   user-select: none;
 }
 
-.user-info {
+.user-trigger {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+  border-radius: 50px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-trigger:hover, .user-trigger.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-avatar {
+  background-color: #ffffff;
+  color: #f97316;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar .nav-icon {
+  stroke: #f97316;
+}
+
+.username {
   font-weight: 500;
+  font-size: 0.95rem;
+  color: #ffffff;
 }
 
-.arrow {
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
+.arrow-icon {
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+  transition: transform 0.25s ease;
 }
 
-.arrow.open {
+.arrow-icon.open {
   transform: rotate(180deg);
 }
 
+/* Menú Desplegable Estilo Tarjeta Elegante */
 .dropdown-menu {
   position: absolute;
   right: 0;
-  top: 100%;
-  margin-top: 0.5rem;
+  top: calc(100% + 10px);
   background-color: #ffffff;
-  color: #333333;
-  border-radius: 4px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  width: 220px;
   overflow: hidden;
-  z-index: 100;
-  min-width: 150px;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border: 1px solid #f3f4f6;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdown-header {
+  padding: 0.85rem 1rem;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-user-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dropdown-user-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111827;
+  margin-top: 2px;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  width: 100%;
 }
 
 .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   width: 100%;
   padding: 0.75rem 1rem;
   text-align: left;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.95rem;
-  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.logout-item {
+  color: #dc2626;
+}
+
+.logout-item .nav-icon {
+  stroke: #dc2626;
 }
 
 .dropdown-item:hover {
-  background-color: #f3f4f6;
-  color: #dc2626; /* Tono rojizo al pasar el cursor para la opción de salir */
+  background-color: #fef2f2;
+  color: #b91c1c;
 }

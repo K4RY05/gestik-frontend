@@ -1,29 +1,32 @@
-import { Component,Input, Output, EventEmitter } from '@angular/core';
+import { Component,Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 @Component({
-  imports: [],
+  imports: [CommonModule],
   selector: 'app-navbar',
   styleUrl: './navbar.css',
   templateUrl: './navbar.html',
 })
 export class Navbar {
-@Input() sucursal: string = 'Sucursal';
-@Input() usuario: string = "Usuario";
+ @Input() sucursal: string = 'Sucursal';
+  @Input() usuario: string = 'Usuario';
+  @Output() onLogout = new EventEmitter<void>();
 
+  isDropdownOpen: boolean = false;
 
-@Output() onLogout = new EventEmitter<void>();
+  toggleDropdown(event: Event) {
+    event.stopPropagation();
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
 
-isDropdownOpen: boolean = false;
+  logout() {
+    this.isDropdownOpen = false;
+    this.onLogout.emit();
+  }
 
-toggleDropdown(){
-
-  this.isDropdownOpen = !this.isDropdownOpen;
+  // Cierra el menú desplegable si se hace clic fuera del componente
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.isDropdownOpen = false;
+  }
 }
 
-logout(){
-  this.isDropdownOpen = false;
-  this.onLogout.emit();
-}
-
-
-}
