@@ -251,3 +251,141 @@
   color: #94a3b8;
   padding: 3rem !important;
 }
+
+
+/* ================= ESTILOS DEL MODAL (Figma Match) ================= */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.45); /* Fondo semitransparente oscuro */
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #023373;
+  margin: 0 0 1.25rem 0;
+}
+
+.modal-info-row {
+  display: flex;
+  gap: 2.5rem;
+  margin-bottom: 1.75rem;
+  font-size: 14px;
+}
+
+.info-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #0f172a;
+  font-weight: 700;
+  margin-left: 0.5rem;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.modal-input-field {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid #dc2626; /* Borde rojo sutil como en el diseño de referencia para errores o enfoque activo */
+  border-radius: 10px;
+  font-size: 15px;
+  color: #0f172a;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-input-field:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.75rem 1.25rem;
+  transition: opacity 0.2s;
+}
+
+.btn-cancel:hover {
+  opacity: 0.8;
+}
+
+.btn-save {
+  background-color: #023373;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 2rem;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(2, 51, 115, 0.2);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-save:hover:not(:disabled) {
+  background-color: #01224f;
+}
+
+.btn-save:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
