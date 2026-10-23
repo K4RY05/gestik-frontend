@@ -9,12 +9,16 @@
       <p class="welcome-subtitle">Aquí tienes el resumen operativo actual de las instalaciones.</p>
     </div>
   </div>
+  <div class="top-action-tabs">
+    <button class="tab-button orange-theme" (click)="goToFormSaller()">Folio de Entrega</button>
+    <button class="tab-button blue-theme"(click)="goToDelivery()">Folio de Instalacion</button>
+  </div>
 
   <!-- Tarjetas de Estadísticas -->
   <div class="stats-cards-wrapper">
     <div class="stat-card">
       <div class="stat-content">
-        <span class="stat-label">Folios sin ticket</span>
+        <span class="stat-label">Folios de Servicio</span>
         <h2 class="stat-number">{{ unassignedTicketsCount }}</h2>
       </div>
       <div class="stat-icon-wrapper orange-theme">
@@ -24,7 +28,7 @@
 
     <div class="stat-card">
       <div class="stat-content">
-        <span class="stat-label">Folios Asignados</span>
+        <span class="stat-label">Folios Pendientes de Asignar</span>
         <h2 class="stat-number">{{ assignedTicketsCount }}</h2>
       </div>
       <div class="stat-icon-wrapper blue-theme">
@@ -36,7 +40,7 @@
   <!-- Tabla de Folios -->
   <div class="table-section-card">
     <div class="table-header-content">
-      <h3 class="table-section-title">Folios de la Sucursal</h3>
+      <h3 class="table-section-title">Folios Recientes</h3>
       <span class="table-counter">{{ installationOrders.length }} registros activos</span>
     </div>
 
@@ -45,7 +49,7 @@
         <thead>
           <tr>
             <th>Folio</th>
-            <th>Colonia</th>
+            <th>Nombre del Cliente</th>
             <th>Fecha</th>
             <th>Estado</th>
             <th class="text-center">Acciones</th>
@@ -54,10 +58,10 @@
         <tbody>
           <tr *ngFor="let item of installationOrders">
             <td><span class="folio-pill">{{ item.folio }}</span></td>
-            <td class="text-dark">{{ item.colony }}</td>
+            <td class="text-dark">{{ item.name }}</td>
             <td class="text-muted">{{ item.date }}</td>
             <td>
-              <span class="status-badge" [class.pending]="item.status === 'Sin ticket'">
+              <span class="status-badge" [class.pending]="item.status === 'No Asignado'">
                 <span class="status-dot"></span>
                 {{ item.status }}
               </span>
@@ -77,47 +81,5 @@
     </div>
   </div>
 
-</div>
-
-<!-- ================= MODAL FLOTANTE ================= -->
-<div class="modal-backdrop" *ngIf="isModalOpen">
-  <div class="modal-card" *ngIf="selectedOrder">
-    
-    <!-- Título principal con el Folio dinámico -->
-    <h2 class="modal-title">Folio: {{ selectedOrder.folio }}</h2>
-    
-    <!-- Información de Colonia y Fecha -->
-    <div class="modal-info-row">
-      <div class="info-item">
-        <span class="info-label">Colonia:</span> 
-        <span class="info-value">{{ selectedOrder.colony }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Fecha:</span> 
-        <span class="info-value">{{ selectedOrder.date }}</span>
-      </div>
-    </div>
-
-    <!-- Formulario del Modal -->
-    <form [formGroup]="editForm" (ngSubmit)="onSaveTicket()" class="modal-form">
-      <div class="form-group">
-        <label for="ticketFolio" class="input-label">Folio del Ticket</label>
-        <input 
-          id="ticketFolio"
-          type="text" 
-          formControlName="ticketFolio"
-          class="modal-input-field" 
-          placeholder="Ej. ID-0013477"
-        />
-      </div>
-
-      <!-- Botones de Acción -->
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" (click)="onCloseModal()">Cancelar</button>
-        <button type="submit" class="btn-save" [disabled]="editForm.invalid">Guardar</button>
-      </div>
-    </form>
-
-  </div>
 </div>
 <app-footer></app-footer>
