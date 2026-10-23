@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
+import { Navbar } from '../../shared/navbar/navbar';
+import { Footer } from '../../shared/footer/footer';
 
 @Component({
-  imports: [],
+  imports: [Navbar, Footer],
   selector: 'app-mainsaller',
   styleUrl: './mainsaller.css',
   templateUrl: './mainsaller.html',
