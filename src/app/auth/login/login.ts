@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { Navbar } from '../../shared/navbar/navbar';
-import { Footer } from '../../shared/footer/footer';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 @Component({
-  imports: [Navbar, Footer],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',
