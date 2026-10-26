@@ -1,1 +1,312 @@
-<p>formsaller works!</p>
+<app-navbar></app-navbar>
+
+<!-- Envolvemos todo el contenedor en una etiqueta <form> vinculada a nuestro FormGroup -->
+<form class="registro-container" [formGroup]="registroForm" (ngSubmit)="guardar()">
+  
+  <!-- Encabezado Principal -->
+  <header class="main-header">
+    <div class="brand-section">
+      <div class="logo-placeholder">
+        <img src="" alt="Logo">
+      </div>
+      <div class="title">
+        <h1>REGISTRO DE SERVICIO</h1>
+      </div>
+    </div>
+    <div class="meta-info">
+      <div class="meta-row">
+        <label>FOLIO:</label>
+        <input type="text" formControlName="folio" class="text-red font-bold text-center">
+      </div>
+      <div class="meta-row">
+        <label>FECHA:</label>
+        <input type="date" formControlName="fecha">
+      </div>
+    </div>
+  </header>
+
+  <!-- Sección 1: Orden de Servicio y Datos del Cliente -->
+  <section class="grid-fluid mt-2">
+    
+    <!-- Orden de Servicio -->
+    <div class="panel">
+      <div class="panel-header">ORDEN DE SERVICIO</div>
+      <div class="panel-body form-grid">
+        <label>MEDIO DE CONTACTO:</label> 
+        <select formControlName="medioContacto">
+          <option value="">Seleccione...</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Llamada">Llamada</option>
+        </select>
+        
+        <label>EMPLEADO RESPONSABLE:</label> 
+        <select formControlName="empleadoResponsable">
+          <option value="">Seleccione...</option>
+          <option *ngFor="let emp of listaEmpleados" [value]="emp.id">
+            {{ emp.nombre }}
+          </option>
+        </select>
+        
+        <label>FECHA DE INSTALACIÓN:</label> 
+        <input type="date" formControlName="fechaInstalacion">
+        
+        <label>HORA DE INSTALACIÓN:</label> 
+        <select formControlName="horaInstalacion">
+          <option value="">Seleccione...</option>
+          <option value="09:00">09:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="13:00">01:00 PM</option>
+          <option value="15:00">03:00 PM</option>
+          <option value="17:00">05:00 PM</option>
+        </select>
+        
+        <label class="bg-blue text-white p-1 inline-block w-auto">OBSERVACIONES:</label>
+        <textarea rows="3" class="mt-1 flex-1" formControlName="observaciones"></textarea>
+      </div>
+    </div>
+
+    <!-- Datos del Cliente -->
+    <div class="panel">
+      <div class="panel-header">DATOS DEL CLIENTE</div>
+      <div class="panel-body form-grid">
+        <label>NOMBRE:</label> 
+        <input type="text" formControlName="nombre">
+                
+        <label>DIRECCIÓN:</label> 
+        <textarea rows="2" formControlName="direccion"></textarea>
+        
+        <label>COLONIA:</label> 
+        <input type="text" formControlName="colonia">
+        
+        <!-- Ciudad y CP alineados -->
+        <label>CIUDAD O ALCALDÍA:</label>
+        <div class="input-group-inline">
+          <input type="text" class="flex-1" formControlName="ciudad">
+          <label class="label-inline">C.P.</label>
+          <input type="text" class="input-small" formControlName="cp">
+        </div>
+        
+        <label>TELÉFONO:</label> 
+        <input type="number" formControlName="telefono">
+        
+        <label class="full-width-label header-blue mt-1">REFERENCIAS DE UBICACIÓN:</label>
+        <input type="text" class="full-width-input" formControlName="referencias">
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección 2: Datos de Servicio -->
+  <section class="panel mt-2">
+    <div class="panel-header text-center">DATOS DE SERVICIO</div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>TAMAÑO PANTALLAS</th>
+            <th>MURO FIRME</th>
+            <th>PLAFÓN FALSO</th>
+            <th>TECHO</th>
+            <th>DESMONTAJE</th>
+            <th>TOTALES</th>
+            <th style="width: 40px;"></th>
+          </tr>
+        </thead>
+        <tbody formArrayName="datosServicio">
+          <tr *ngFor="let fila of datosServicio.controls; let i = index" [formGroupName]="i">
+            <td>
+              <select formControlName="tamanoPantallas">
+                <option value="">Seleccione...</option>
+                <option value="32-43">32" - 43"</option>
+                <option value="49-55">49" - 55"</option>
+                <option value="65-75">65" - 75"</option>
+                <option value="85+">85"+</option>
+              </select>
+            </td>
+            <td><input type="number" formControlName="muroFirme"></td>
+            <td><input type="number" formControlName="plafonFalso"></td>
+            <td><input type="number" formControlName="techo"></td>
+            <td><input type="number" formControlName="desmontaje"></td>
+            <td><input type="number" formControlName="total"></td>
+            <td class="text-center">
+              <button type="button" class="btn-delete" (click)="removeFilaServicio(i)" title="Eliminar fila">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Botón Agregar Fila -->
+      <div class="add-row-container">
+        <button type="button" class="btn-add" (click)="addFilaServicio()">
+          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección 3: Material de Instalación -->
+  <section class="panel mt-2">
+    <div class="panel-header text-center">MATERIAL DE INSTALACIÓN Y OTROS SERVICIOS</div>
+    <div class="table-responsive">
+      <table class="data-table col-widths-material">
+        <thead>
+          <tr>
+            <th>CANTIDAD</th>
+            <th>DESCRIPCIÓN</th>
+            <th>PRECIO UNITARIO</th>
+            <th>TOTAL</th>
+            <th style="width: 40px;"></th>
+          </tr>
+        </thead>
+        <tbody formArrayName="materiales">
+          <tr *ngFor="let fila of materiales.controls; let i = index" [formGroupName]="i">
+            <td><input type="number" formControlName="cantidad"></td>
+            <td><input type="text" formControlName="descripcion"></td>
+            <td class="flex-cell">
+              <input type="number" formControlName="precioUnitario">
+            </td>
+            <td><input type="number" formControlName="total"></td>
+            <td class="text-center">
+              <button type="button" class="btn-delete" (click)="removeFilaMaterial(i)" title="Eliminar fila">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Botón Agregar Fila -->
+      <div class="add-row-container">
+        <button type="button" class="btn-add" (click)="addFilaMaterial()">
+          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección 4: Soportes y Totales -->
+  <section class="panel mt-2">
+    <div class="panel-header text-center">SOPORTES / PEDESTALES PARA PANTALLAS</div>
+    
+    <div class="status-row p-2 bg-light-gray flex-wrap">
+      <div class="flex-row flex-1 min-w-200">
+        <label class="bg-blue text-white p-1">ESTATUS:</label> 
+        <select class="flex-1 ml-1" formControlName="estatus">
+          <option value="">Seleccione...</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="En Proceso">En Proceso</option>
+          <option value="Completado">Completado</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="flex-row flex-1 min-w-200 ml-2-md mt-1-sm">
+        <label class="bg-blue text-white p-1">DISPONIBILIDAD:</label> 
+        <select class="flex-1 ml-1" formControlName="disponibilidad">
+          <option value="">Seleccione...</option>
+          <option value="Inmediata">Inmediata</option>
+          <option value="Bajo Pedido">Bajo Pedido</option>
+          <option value="Agotado">Agotado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive mt-1">
+      <table class="data-table col-widths-material">
+        <thead>
+          <tr>
+            <th>CANTIDAD</th>
+            <th>DESCRIPCIÓN</th>
+            <th>PRECIO UNITARIO</th>
+            <th>TOTAL</th>
+            <th style="width: 40px;"></th>
+          </tr>
+        </thead>
+        <tbody formArrayName="soportes">
+          <tr *ngFor="let fila of soportes.controls; let i = index" [formGroupName]="i">
+            <td><input type="number" formControlName="cantidad"></td>
+            <td>
+              <select formControlName="descripcion">
+                <option value="">Seleccione soporte...</option>
+                <option value="Fijo">Soporte Fijo</option>
+                <option value="Inclinable">Soporte Inclinable</option>
+                <option value="Articulado">Soporte Articulado de Brazo</option>
+                <option value="Pedestal">Pedestal Móvil</option>
+                <option value="Techo">Soporte de Techo</option>
+              </select>
+            </td>
+            <td class="flex-cell">
+              <input type="number" formControlName="precioUnitario">
+            </td>
+            <td><input type="number" formControlName="total"></td>
+            <td class="text-center">
+              <button type="button" class="btn-delete" (click)="removeFilaSoporte(i)" title="Eliminar fila">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Botón Agregar Fila -->
+      <div class="add-row-container">
+        <button type="button" class="btn-add" (click)="addFilaSoporte()">
+          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
+        </button>
+      </div>
+    </div>
+    <!-- Observaciones, Instaladores y Pagos -->
+<div class="observaciones-box flex-column p-2">
+  <div class="fila-final mt-1">
+
+    <!-- Columna izquierda: instaladores -->
+    <div class="instaladores-section">
+      <label class="bg-blue text-white p-1 inline-block mb-1">INSTALADOR (ES):</label>
+
+      <div formArrayName="instaladores" class="flex-column gap-1">
+        <div *ngFor="let control of instaladores.controls; let i = index" class="flex-row items-center gap-1">
+          <select [formControlName]="i" class="flex-1 min-w-100">
+            <option value="">Seleccione instalador...</option>
+            <option *ngFor="let emp of listaEmpleados" [value]="emp.id">{{ emp.nombre }}</option>
+          </select>
+          <button type="button" class="btn-delete" (click)="removeInstalador(i)"
+                  *ngIf="instaladores.length > 1" title="Eliminar instalador">✕</button>
+        </div>
+      </div>
+
+      <div class="add-row-container">
+        <button type="button" class="btn-add" (click)="addInstalador()">
+          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar instalador
+        </button>
+      </div>
+    </div>
+
+    <!-- Columna derecha: pagos -->
+    <div class="pagos-col">
+      <div class="campo-pago">
+        <label class="bg-orange">FORMA DE PAGO:</label>
+        <select formControlName="formaPago">
+          <option value="">Seleccione...</option>
+          <option value="Efectivo">Efectivo</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="Tarjeta">Tarjeta</option>
+        </select>
+      </div>
+      <div class="campo-pago">
+        <label class="bg-blue">SUBTOTAL:</label>
+        <input type="text" class="text-right" readonly [value]="subtotal | currency:'USD':'symbol':'1.2-2'">
+      </div>
+      <div class="campo-pago">
+        <label class="bg-blue">TOTAL A PAGAR:</label>
+        <input type="text" class="text-right font-bold text-lg" readonly [value]="totalPagar | currency:'USD':'symbol':'1.2-2'">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="action-buttons">
+  <button type="submit" class="btn btn-orange">Guardar</button>
+  <button type="button" class="btn btn-green">Orden de Servicio</button>
+  <button type="button" class="btn btn-red" (click)="goToMain()">Salir</button>
+</div>
+  
+</section>
+</form>
+
+<app-footer></app-footer>
