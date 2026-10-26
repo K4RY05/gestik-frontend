@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-
 @Component({
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   selector: 'app-login',
