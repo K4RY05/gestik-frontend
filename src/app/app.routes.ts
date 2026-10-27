@@ -13,8 +13,8 @@ export const routes: Routes = [
     children: [
       { path: 'users', loadComponent: () => import('./admin/users/users').then(m => m.Users) },
       { path: 'products', loadComponent: () => import('./admin/products/products').then(m => m.Products) },
-      { path: 'metrics', loadComponent: () => import('./admin/metrics/metrics').then(m => m.Metrics) },
-      { path: '', redirectTo: 'metrics', pathMatch: 'full' }
+      { path: 'main', loadComponent: () => import('./admin/metrics/metrics').then(m => m.Metrics) },
+      { path: '', redirectTo: 'main', pathMatch: 'full' }
     ]
   },
 
