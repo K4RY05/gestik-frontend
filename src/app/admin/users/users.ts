@@ -276,5 +276,9 @@ export class Users {
       id_rol: this.roles[1]?.id_rol || 2
     };
   }
-  
+  constructor(private router:Router) {}
+
+  goToMain(){
+  this.router.navigate(['/admin/main']);
+  }
 }

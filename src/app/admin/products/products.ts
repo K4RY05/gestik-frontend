@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../shared/navbar/navbar';
 import { Footer } from '../../shared/footer/footer';
+import { Router } from '@angular/router';
 
 export interface CategoriaProducto {
   id_categoria: number;
@@ -60,6 +61,12 @@ export class Products {
     { id_producto: 5, nombre: 'Pinzas Ponchadoras Profesionales RJ45', precio: 450.00, activo_producto: false, id_categoria: 3 },
     { id_producto: 6, nombre: 'Mantenimiento Preventivo de Enlace', precio: 800.00, activo_producto: true, id_categoria: 4 }
   ];
+
+  constructor(private router:Router) {}
+
+  goToMain(){
+  this.router.navigate(['/admin/main']);
+  }
 
   // Formulario actual
   currentProducto: Producto = this.getEmptyProducto();
@@ -228,4 +235,5 @@ export class Products {
       id_categoria: this.categorias[0]?.id_categoria || 1
     };
   }
+  
 }

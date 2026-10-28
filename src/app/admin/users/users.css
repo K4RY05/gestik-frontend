@@ -659,29 +659,44 @@
   background-color: #b91c1c;
   transform: translateY(-1px);
 }
+
+
+/* Botón de Regreso Integrado */
 .btn-back {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.85rem;
-  background-color: transparent;
-  color: #4b5563;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 0.45rem 0.9rem;
+  background-color: #ffffff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  margin-bottom: 0.75rem;
-  transition: all 0.2s ease-in-out;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-back:hover {
-  background-color: #f3f4f6;
-  color: #111827;
-  border-color: #9ca3af;
+  background-color: #eff6ff;
+  border-color: #cbd5e1;
+  color: #023373;
+  transform: translateX(-2px);
+  box-shadow: 0 4px 10px rgba(2, 51, 115, 0.08);
+}
+
+.btn-back:active {
+  transform: translateX(0);
 }
 
 .btn-back .btn-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
+  transition: transform 0.2s ease;
+}
+
+.btn-back:hover .btn-icon {
+  transform: translateX(-2px);
 }

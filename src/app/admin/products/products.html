@@ -1,12 +1,25 @@
 <app-navbar></app-navbar>
 <div class="dashboard-container">
+<div class="dashboard-container">
   <!-- Cabecera del Dashboard -->
   <header class="dashboard-header">
     <div class="header-titles-box">
-      <span class="welcome-tag">Administración</span>
-      <h1 class="welcome-title">Catálogo de Productos</h1>
-      <p class="welcome-subtitle">Administra los insumos, materiales y precios registrados en el sistema</p>
+      <!-- Botón de Regreso Integrado -->
+      <button type="button" class="btn-back" (click)="goToMain()" title="Regresar al panel principal">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Regresar</span>
+      </button>
+
+      <div>
+        <span class="welcome-tag">Administración</span>
+        <h1 class="welcome-title">Catálogo de Productos</h1>
+        <p class="welcome-subtitle">Administra los insumos, materiales y precios registrados en el sistema</p>
+      </div>
     </div>
+
     <button type="button" class="btn-create" (click)="openCreateModal()">
       <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -15,7 +28,7 @@
       <span>Nuevo Producto</span>
     </button>
   </header>
-
+</div>
   <!-- Tarjetas de Estadísticas (Grid) -->
   <section class="stats-cards-wrapper">
     <div class="stat-card">
