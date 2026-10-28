@@ -3,6 +3,13 @@
   <!-- Cabecera del Dashboard -->
   <header class="dashboard-header">
     <div class="header-titles-box">
+      <button type="button" class="btn-back" (click)="gotoMain()" title="Volver al menú principal">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Regresar</span>
+      </button>
       <span class="welcome-tag">Administración</span>
       <h1 class="welcome-title">Usuarios y Trabajadores</h1>
       <p class="welcome-subtitle">Alta, credenciales de acceso y asignación de roles para el personal</p>

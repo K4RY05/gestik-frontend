@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../shared/navbar/navbar';
 import { Footer } from '../../shared/footer/footer';
+import { Router } from '@angular/router';
 
 export interface Rol {
   id_rol: number;
@@ -275,4 +276,5 @@ export class Users {
       id_rol: this.roles[1]?.id_rol || 2
     };
   }
+  
 }
