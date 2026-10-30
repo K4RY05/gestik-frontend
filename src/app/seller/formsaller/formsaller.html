@@ -1,121 +1,176 @@
 <app-navbar></app-navbar>
 
-<!-- Envolvemos todo el contenedor en una etiqueta <form> vinculada a nuestro FormGroup -->
-<form class="registro-container" [formGroup]="registroForm" (ngSubmit)="guardar()">
-  
-  <!-- Encabezado Principal -->
-  <header class="main-header">
-    <div class="brand-section">
-      <div class="logo-placeholder">
-        <img src="" alt="Logo">
-      </div>
-      <div class="title">
-        <h1>REGISTRO DE SERVICIO</h1>
-      </div>
+<form class="registro" [formGroup]="registroForm" (ngSubmit)="guardar()" novalidate
+      (keydown.enter)="onEnter($event)" (focusin)="seleccionarTodo($event)">
+
+  <!-- Encabezado -->
+  <header class="encabezado">
+    <div>
+      <h1>Registro de servicio</h1>
+      <p class="ayuda">Los campos con <b class="req">*</b> son obligatorios. Enter pasa al siguiente campo.</p>
     </div>
-    <div class="meta-info">
-      <div class="meta-row">
-        <label>FOLIO:</label>
-        <input type="text" formControlName="folio" class="text-red font-bold text-center">
+    <div class="meta">
+      <div class="field field-sm">
+        <label for="f-folio">Folio</label>
+        <input id="f-folio" type="text" formControlName="folio" class="folio">
       </div>
-      <div class="meta-row">
-        <label>FECHA:</label>
-        <input type="date" formControlName="fecha">
+      <div class="field field-sm" [class.is-invalid]="invalido('fecha')">
+        <label for="f-fecha">Fecha <b class="req">*</b></label>
+        <input id="f-fecha" type="date" formControlName="fecha">
+        <small class="msg" *ngIf="invalido('fecha')">{{ mensaje('fecha') }}</small>
       </div>
     </div>
   </header>
 
-  <!-- Sección 1: Orden de Servicio y Datos del Cliente -->
-  <section class="grid-fluid mt-2">
-    
-    <!-- Orden de Servicio -->
-    <div class="panel">
-      <div class="panel-header">ORDEN DE SERVICIO</div>
-      <div class="panel-body form-grid">
-        <label>MEDIO DE CONTACTO:</label> 
-        <select formControlName="medioContacto">
-          <option value="">Seleccione...</option>
-          <option value="WhatsApp">WhatsApp</option>
-          <option value="Facebook">Facebook</option>
-          <option value="Llamada">Llamada</option>
-        </select>
-        
-        <label>EMPLEADO RESPONSABLE:</label> 
-        <select formControlName="empleadoResponsable">
-          <option value="">Seleccione...</option>
-          <option *ngFor="let emp of listaEmpleados" [value]="emp.id">
-            {{ emp.nombre }}
-          </option>
-        </select>
-        
-        <label>FECHA DE INSTALACIÓN:</label> 
-        <input type="date" formControlName="fechaInstalacion">
-        
-        <label>HORA DE INSTALACIÓN:</label> 
-        <select formControlName="horaInstalacion">
-          <option value="">Seleccione...</option>
-          <option value="09:00">09:00 AM</option>
-          <option value="11:00">11:00 AM</option>
-          <option value="13:00">01:00 PM</option>
-          <option value="15:00">03:00 PM</option>
-          <option value="17:00">05:00 PM</option>
-        </select>
-        
-        <label class="bg-blue text-white p-1 inline-block w-auto">OBSERVACIONES:</label>
-        <textarea rows="3" class="mt-1 flex-1" formControlName="observaciones"></textarea>
-      </div>
-    </div>
+  <div class="alerta alerta-ok" *ngIf="guardadoOk" role="status">Registro guardado correctamente.</div>
 
-    <!-- Datos del Cliente -->
-    <div class="panel">
-      <div class="panel-header">DATOS DEL CLIENTE</div>
-      <div class="panel-body form-grid">
-        <label>NOMBRE:</label> 
-        <input type="text" formControlName="nombre">
-                
-        <label>DIRECCIÓN:</label> 
-        <textarea rows="2" formControlName="direccion"></textarea>
-        
-        <label>COLONIA:</label> 
-        <input type="text" formControlName="colonia">
-        
-        <!-- Ciudad y CP alineados -->
-        <label>CIUDAD O ALCALDÍA:</label>
-        <div class="input-group-inline">
-          <input type="text" class="flex-1" formControlName="ciudad">
-          <label class="label-inline">C.P.</label>
-          <input type="text" class="input-small" formControlName="cp">
+  <div class="alerta alerta-error" *ngIf="intentoEnvio && faltantes.length" role="alert">
+    <strong>Faltan {{ faltantes.length }} dato{{ faltantes.length > 1 ? 's' : '' }} para guardar</strong>
+    <div class="alerta-lista">
+      <button type="button" *ngFor="let p of faltantes" (click)="irA(p.id)">{{ p.label }}</button>
+    </div>
+  </div>
+
+  <!-- Orden de servicio | Datos del cliente -->
+  <div class="par">
+
+    <section class="seccion" [attr.data-estado]="estadoSeccion('orden')">
+      <div class="seccion-head">
+        <h2>Orden de servicio</h2>
+        <span class="estado">{{ textoSeccion('orden') }}</span>
+      </div>
+
+      <div class="grid">
+        <div class="field span-2" [class.is-invalid]="invalido('medioContacto')">
+          <span class="lbl">Medio de contacto <b class="req">*</b></span>
+          <div class="chips" id="f-medioContacto" tabindex="-1">
+            <label class="chip" *ngFor="let m of mediosContacto">
+              <input type="radio" name="medioContacto" formControlName="medioContacto" [value]="m"><span>{{ m }}</span>
+            </label>
+          </div>
+          <small class="msg" *ngIf="invalido('medioContacto')">Elige cómo contactó el cliente</small>
         </div>
-        
-        <label>TELÉFONO:</label> 
-        <input type="number" formControlName="telefono">
-        
-        <label class="full-width-label header-blue mt-1">REFERENCIAS DE UBICACIÓN:</label>
-        <input type="text" class="full-width-input" formControlName="referencias">
-      </div>
-    </div>
-  </section>
 
-  <!-- Sección 2: Datos de Servicio -->
-  <section class="panel mt-2">
-    <div class="panel-header text-center">DATOS DE SERVICIO</div>
-    <div class="table-responsive">
-      <table class="data-table">
+        <div class="field" [class.is-invalid]="invalido('empleadoResponsable')" [class.is-valid]="valido('empleadoResponsable')">
+          <label for="f-empleadoResponsable">Empleado responsable <b class="req">*</b></label>
+          <select id="f-empleadoResponsable" formControlName="empleadoResponsable">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let emp of listaEmpleados" [value]="emp.id">{{ emp.nombre }}</option>
+          </select>
+          <small class="msg" *ngIf="invalido('empleadoResponsable')">{{ mensaje('empleadoResponsable') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('fechaInstalacion')" [class.is-valid]="valido('fechaInstalacion')">
+          <label for="f-fechaInstalacion">Fecha de instalación <b class="req">*</b></label>
+          <input id="f-fechaInstalacion" type="date" formControlName="fechaInstalacion" [min]="hoy">
+          <small class="msg" *ngIf="invalido('fechaInstalacion')">{{ mensaje('fechaInstalacion') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('horaInstalacion')" [class.is-valid]="valido('horaInstalacion')">
+          <label for="f-horaInstalacion">Hora de instalación <b class="req">*</b></label>
+          <select id="f-horaInstalacion" formControlName="horaInstalacion">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let h of horas" [value]="h.v">{{ h.t }}</option>
+          </select>
+          <small class="msg" *ngIf="invalido('horaInstalacion')">{{ mensaje('horaInstalacion') }}</small>
+        </div>
+
+        <div class="field span-2" [class.is-invalid]="invalido('estatus')">
+          <span class="lbl">Estatus <b class="req">*</b></span>
+          <div class="chips" id="f-estatus" tabindex="-1">
+            <label class="chip" *ngFor="let e of estatusOpc">
+              <input type="radio" name="estatus" formControlName="estatus" [value]="e"><span>{{ e }}</span>
+            </label>
+          </div>
+          <small class="msg" *ngIf="invalido('estatus')">Elige un estatus</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" [attr.data-estado]="estadoSeccion('cliente')">
+      <div class="seccion-head">
+        <h2>Datos del cliente</h2>
+        <span class="estado">{{ textoSeccion('cliente') }}</span>
+      </div>
+
+      <div class="grid">
+        <div class="field" [class.is-invalid]="invalido('nombre')" [class.is-valid]="valido('nombre')">
+          <label for="f-nombre">Nombre <b class="req">*</b></label>
+          <input id="f-nombre" type="text" formControlName="nombre" autocomplete="off" placeholder="Nombre completo">
+          <small class="msg" *ngIf="invalido('nombre')">{{ mensaje('nombre') }}</small>
+        </div>
+
+        <div class="field">
+          <label for="f-empresa">Empresa</label>
+          <input id="f-empresa" type="text" formControlName="empresa" autocomplete="off" placeholder="Opcional">
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('telefono')" [class.is-valid]="valido('telefono')">
+          <label for="f-telefono">Teléfono <b class="req">*</b></label>
+          <input id="f-telefono" type="tel" inputmode="numeric" maxlength="10" formControlName="telefono"
+                 placeholder="10 dígitos" (input)="soloDigitos($event, 'telefono')">
+          <small class="msg" *ngIf="invalido('telefono')">{{ mensaje('telefono') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('colonia')" [class.is-valid]="valido('colonia')">
+          <label for="f-colonia">Colonia <b class="req">*</b></label>
+          <input id="f-colonia" type="text" formControlName="colonia" autocomplete="off">
+          <small class="msg" *ngIf="invalido('colonia')">{{ mensaje('colonia') }}</small>
+        </div>
+
+        <div class="field span-2" [class.is-invalid]="invalido('direccion')" [class.is-valid]="valido('direccion')">
+          <label for="f-direccion">Dirección <b class="req">*</b></label>
+          <input id="f-direccion" type="text" formControlName="direccion" autocomplete="off" placeholder="Calle y número">
+          <small class="msg" *ngIf="invalido('direccion')">{{ mensaje('direccion') }}</small>
+        </div>
+
+        <div class="fila-doble span-2">
+          <div class="field" [class.is-invalid]="invalido('ciudad')" [class.is-valid]="valido('ciudad')">
+            <label for="f-ciudad">Ciudad o alcaldía <b class="req">*</b></label>
+            <input id="f-ciudad" type="text" formControlName="ciudad" autocomplete="off">
+            <small class="msg" *ngIf="invalido('ciudad')">{{ mensaje('ciudad') }}</small>
+          </div>
+          <div class="field" [class.is-invalid]="invalido('cp')" [class.is-valid]="valido('cp')">
+            <label for="f-cp">C.P. <b class="req">*</b></label>
+            <input id="f-cp" type="text" inputmode="numeric" maxlength="5" formControlName="cp"
+                   (input)="soloDigitos($event, 'cp')">
+            <small class="msg" *ngIf="invalido('cp')">{{ mensaje('cp') }}</small>
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <label for="f-referencias">Referencias de ubicación</label>
+          <input id="f-referencias" type="text" formControlName="referencias"
+                 placeholder="Opcional: entre calles, color de fachada, piso...">
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Conceptos -->
+  <section class="seccion" [attr.data-estado]="estadoSeccion('conceptos')">
+    <div class="seccion-head">
+      <h2>Datos de servicio</h2>
+      <span class="estado">{{ textoSeccion('conceptos') }}</span>
+    </div>
+    <p class="ayuda aviso" *ngIf="registroForm.hasError('sinConceptos') && intentoEnvio">
+      Captura al menos un servicio, material o soporte con importe.
+    </p>
+
+    <div class="tabla-wrap">
+      <table class="tabla">
         <thead>
           <tr>
-            <th>TAMAÑO PANTALLAS</th>
-            <th>MURO FIRME</th>
-            <th>PLAFÓN FALSO</th>
-            <th>TECHO</th>
-            <th>DESMONTAJE</th>
-            <th>TOTALES</th>
-            <th style="width: 40px;"></th>
+            <th>Tamaño pantallas</th><th class="num">Muro firme</th><th class="num">Plafón falso</th>
+            <th class="num">Techo</th><th class="num">Desmontaje</th>
+            <th class="num w-total">Totales</th><th></th>
           </tr>
         </thead>
         <tbody formArrayName="datosServicio">
           <tr *ngFor="let fila of datosServicio.controls; let i = index" [formGroupName]="i">
-            <td>
-              <select formControlName="tamanoPantallas">
+            <td data-label="Tamaño">
+              <select [id]="'svc-' + i + '-tamanoPantallas'" formControlName="tamanoPantallas"
+                      [class.is-invalid]="celdaInvalida(fila, 'tamanoPantallas')">
                 <option value="">Seleccione...</option>
                 <option value="32-43">32" - 43"</option>
                 <option value="49-55">49" - 55"</option>
@@ -123,190 +178,188 @@
                 <option value="85+">85"+</option>
               </select>
             </td>
-            <td><input type="number" formControlName="muroFirme"></td>
-            <td><input type="number" formControlName="plafonFalso"></td>
-            <td><input type="number" formControlName="techo"></td>
-            <td><input type="number" formControlName="desmontaje"></td>
-            <td><input type="number" formControlName="total"></td>
-            <td class="text-center">
-              <button type="button" class="btn-delete" (click)="removeFilaServicio(i)" title="Eliminar fila">✕</button>
+            <td data-label="Muro firme"><input [id]="'svc-' + i + '-muroFirme'" type="number" inputmode="decimal" min="0" placeholder="0" formControlName="muroFirme" [class.is-invalid]="celdaInvalida(fila, 'monto')"></td>
+            <td data-label="Plafón falso"><input type="number" inputmode="decimal" min="0" placeholder="0" formControlName="plafonFalso" [class.is-invalid]="celdaInvalida(fila, 'monto')"></td>
+            <td data-label="Techo"><input type="number" inputmode="decimal" min="0" placeholder="0" formControlName="techo" [class.is-invalid]="celdaInvalida(fila, 'monto')"></td>
+            <td data-label="Desmontaje"><input type="number" inputmode="decimal" min="0" placeholder="0" formControlName="desmontaje" [class.is-invalid]="celdaInvalida(fila, 'monto')"></td>
+            <td data-label="Total" class="num total-celda">{{ fila.get('total')?.value | currency:'MXN':'symbol-narrow':'1.2-2' }}</td>
+            <td class="acc">
+              <button type="button" class="btn-quitar" (click)="removeFilaServicio(i)"
+                      [disabled]="datosServicio.length === 1" title="Quitar fila" aria-label="Quitar fila">✕</button>
             </td>
           </tr>
         </tbody>
       </table>
-      
-      <!-- Botón Agregar Fila -->
-      <div class="add-row-container">
-        <button type="button" class="btn-add" (click)="addFilaServicio()">
-          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
-        </button>
+    </div>
+    <div class="pie-tabla">
+      <button type="button" class="btn-agregar" (click)="addFilaServicio()">+ Agregar fila</button>
+      <div class="linea-iva">
+        <label for="iva-servicio">I.V.A.</label>
+        <select id="iva-servicio" formControlName="ivaServicio" class="sel-iva">
+          <option *ngFor="let o of ivaOpc" [ngValue]="o.v">{{ o.t }}</option>
+        </select>
+        <output class="monto">{{ totServicio.iva | currency:'MXN':'symbol-narrow':'1.2-2' }}</output>
+        <span class="lbl-sub">Subtotal</span>
+        <output class="monto monto-fuerte">{{ totServicio.total | currency:'MXN':'symbol-narrow':'1.2-2' }}</output>
       </div>
     </div>
-  </section>
 
-  <!-- Sección 3: Material de Instalación -->
-  <section class="panel mt-2">
-    <div class="panel-header text-center">MATERIAL DE INSTALACIÓN Y OTROS SERVICIOS</div>
-    <div class="table-responsive">
-      <table class="data-table col-widths-material">
+    <h3>Material de instalación y otros servicios</h3>
+    <datalist id="lista-materiales">
+      <option *ngFor="let m of catalogoMateriales" [value]="m"></option>
+    </datalist>
+    <div class="tabla-wrap">
+      <table class="tabla">
         <thead>
-          <tr>
-            <th>CANTIDAD</th>
-            <th>DESCRIPCIÓN</th>
-            <th>PRECIO UNITARIO</th>
-            <th>TOTAL</th>
-            <th style="width: 40px;"></th>
-          </tr>
+          <tr><th class="w-cant">Cantidad</th><th>Descripción</th><th class="w-precio num">Precio unitario</th><th class="num w-total">Total</th><th></th></tr>
         </thead>
         <tbody formArrayName="materiales">
           <tr *ngFor="let fila of materiales.controls; let i = index" [formGroupName]="i">
-            <td><input type="number" formControlName="cantidad"></td>
-            <td><input type="text" formControlName="descripcion"></td>
-            <td class="flex-cell">
-              <input type="number" formControlName="precioUnitario">
-            </td>
-            <td><input type="number" formControlName="total"></td>
-            <td class="text-center">
-              <button type="button" class="btn-delete" (click)="removeFilaMaterial(i)" title="Eliminar fila">✕</button>
+            <td data-label="Cantidad"><input [id]="'mat-' + i + '-cantidad'" type="number" inputmode="numeric" min="0" placeholder="0" formControlName="cantidad" [class.is-invalid]="celdaInvalida(fila, 'cantidad')"></td>
+            <td data-label="Descripción"><input [id]="'mat-' + i + '-descripcion'" type="text" list="lista-materiales" formControlName="descripcion" autocomplete="off" placeholder="Escribe o elige..." [class.is-invalid]="celdaInvalida(fila, 'descripcion')"></td>
+            <td data-label="Precio unitario"><input [id]="'mat-' + i + '-precioUnitario'" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" formControlName="precioUnitario" [class.is-invalid]="celdaInvalida(fila, 'precioUnitario')"></td>
+            <td data-label="Total" class="num total-celda">{{ fila.get('total')?.value | currency:'MXN':'symbol-narrow':'1.2-2' }}</td>
+            <td class="acc">
+              <button type="button" class="btn-quitar" (click)="removeFilaMaterial(i)"
+                      [disabled]="materiales.length === 1" title="Quitar fila" aria-label="Quitar fila">✕</button>
             </td>
           </tr>
         </tbody>
       </table>
-      
-      <!-- Botón Agregar Fila -->
-      <div class="add-row-container">
-        <button type="button" class="btn-add" (click)="addFilaMaterial()">
-          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
-        </button>
+    </div>
+    <div class="pie-tabla">
+      <button type="button" class="btn-agregar" (click)="addFilaMaterial()">+ Agregar fila</button>
+      <div class="linea-iva">
+        <label for="iva-material">I.V.A.</label>
+        <select id="iva-material" formControlName="ivaMaterial" class="sel-iva">
+          <option *ngFor="let o of ivaOpc" [ngValue]="o.v">{{ o.t }}</option>
+        </select>
+        <output class="monto">{{ totMaterial.iva | currency:'MXN':'symbol-narrow':'1.2-2' }}</output>
+        <span class="lbl-sub">Subtotal</span>
+        <output class="monto monto-fuerte">{{ totMaterial.total | currency:'MXN':'symbol-narrow':'1.2-2' }}</output>
+      </div>
+    </div>
+
+    <h3>Soportes / pedestales para pantallas</h3>
+    <div class="field field-disp">
+      <label for="f-disponibilidad">Disponibilidad</label>
+      <select id="f-disponibilidad" formControlName="disponibilidad">
+        <option value="">Seleccione...</option>
+        <option *ngFor="let d of disponibilidadOpc" [value]="d">{{ d }}</option>
+      </select>
+    </div>
+    <div class="tabla-wrap">
+      <table class="tabla">
+        <thead>
+          <tr><th class="w-cant">Cantidad</th><th>Soporte</th><th class="w-precio num">Precio unitario</th><th class="num w-total">Total</th><th></th></tr>
+        </thead>
+        <tbody formArrayName="soportes">
+          <tr *ngFor="let fila of soportes.controls; let i = index" [formGroupName]="i">
+            <td data-label="Cantidad"><input [id]="'sop-' + i + '-cantidad'" type="number" inputmode="numeric" min="0" placeholder="0" formControlName="cantidad" [class.is-invalid]="celdaInvalida(fila, 'cantidad')"></td>
+            <td data-label="Soporte">
+              <select [id]="'sop-' + i + '-descripcion'" formControlName="descripcion" [class.is-invalid]="celdaInvalida(fila, 'descripcion')">
+                <option value="">Seleccione soporte...</option>
+                <option value="Fijo">Soporte fijo</option>
+                <option value="Inclinable">Soporte inclinable</option>
+                <option value="Articulado">Soporte articulado de brazo</option>
+                <option value="Pedestal">Pedestal móvil</option>
+                <option value="Techo">Soporte de techo</option>
+              </select>
+            </td>
+            <td data-label="Precio unitario"><input [id]="'sop-' + i + '-precioUnitario'" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" formControlName="precioUnitario" [class.is-invalid]="celdaInvalida(fila, 'precioUnitario')"></td>
+            <td data-label="Total" class="num total-celda">{{ fila.get('total')?.value | currency:'MXN':'symbol-narrow':'1.2-2' }}</td>
+            <td class="acc">
+              <button type="button" class="btn-quitar" (click)="removeFilaSoporte(i)"
+                      [disabled]="soportes.length === 1" title="Quitar fila" aria-label="Quitar fila">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pie-tabla">
+      <button type="button" class="btn-agregar" (click)="addFilaSoporte()">+ Agregar fila</button>
+      <div class="linea-iva">
+        <span class="lbl-sub">Subtotal</span>
+        <output class="monto monto-fuerte">{{ totSoportes.total | currency:'MXN':'symbol-narrow':'1.2-2' }}</output>
       </div>
     </div>
   </section>
 
-  <!-- Sección 4: Soportes y Totales -->
-  <section class="panel mt-2">
-    <div class="panel-header text-center">SOPORTES / PEDESTALES PARA PANTALLAS</div>
-    
-    <div class="status-row p-2 bg-light-gray flex-wrap">
-      <div class="flex-row flex-1 min-w-200">
-        <label class="bg-blue text-white p-1">ESTATUS:</label> 
-        <select class="flex-1 ml-1" formControlName="estatus">
-          <option value="">Seleccione...</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="En Proceso">En Proceso</option>
-          <option value="Completado">Completado</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
-      </div>
-      <div class="flex-row flex-1 min-w-200 ml-2-md mt-1-sm">
-        <label class="bg-blue text-white p-1">DISPONIBILIDAD:</label> 
-        <select class="flex-1 ml-1" formControlName="disponibilidad">
-          <option value="">Seleccione...</option>
-          <option value="Inmediata">Inmediata</option>
-          <option value="Bajo Pedido">Bajo Pedido</option>
-          <option value="Agotado">Agotado</option>
-        </select>
-      </div>
+  <!-- Cierre -->
+  <section class="seccion" [attr.data-estado]="estadoSeccion('cierre')">
+    <div class="seccion-head">
+      <h2>Cierre</h2>
+      <span class="estado">{{ textoSeccion('cierre') }}</span>
     </div>
 
-    <div class="table-responsive mt-1">
-      <table class="data-table col-widths-material">
-        <thead>
-          <tr>
-            <th>CANTIDAD</th>
-            <th>DESCRIPCIÓN</th>
-            <th>PRECIO UNITARIO</th>
-            <th>TOTAL</th>
-            <th style="width: 40px;"></th>
-          </tr>
-        </thead>
-        <tbody formArrayName="soportes">
-          <tr *ngFor="let fila of soportes.controls; let i = index" [formGroupName]="i">
-            <td><input type="number" formControlName="cantidad"></td>
-            <td>
-              <select formControlName="descripcion">
-                <option value="">Seleccione soporte...</option>
-                <option value="Fijo">Soporte Fijo</option>
-                <option value="Inclinable">Soporte Inclinable</option>
-                <option value="Articulado">Soporte Articulado de Brazo</option>
-                <option value="Pedestal">Pedestal Móvil</option>
-                <option value="Techo">Soporte de Techo</option>
+    <div class="cierre">
+      <div class="cierre-izq">
+        <div class="field">
+          <label for="f-observaciones">Observaciones</label>
+          <textarea id="f-observaciones" rows="3" formControlName="observaciones"
+                    placeholder="Opcional: detalles que el instalador deba saber"></textarea>
+        </div>
+        <div class="field">
+          <span class="lbl">Instalador(es) <b class="req">*</b></span>
+          <div formArrayName="instaladores" class="lista-instaladores">
+            <div class="instalador" *ngFor="let control of instaladores.controls; let i = index"
+                 [class.is-invalid]="invalidoCtrl(control)">
+              <select [id]="'f-instalador-' + i" [formControlName]="i">
+                <option value="">Seleccione instalador...</option>
+                <option *ngFor="let emp of listaEmpleados" [value]="emp.id">{{ emp.nombre }}</option>
               </select>
-            </td>
-            <td class="flex-cell">
-              <input type="number" formControlName="precioUnitario">
-            </td>
-            <td><input type="number" formControlName="total"></td>
-            <td class="text-center">
-              <button type="button" class="btn-delete" (click)="removeFilaSoporte(i)" title="Eliminar fila">✕</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <!-- Botón Agregar Fila -->
-      <div class="add-row-container">
-        <button type="button" class="btn-add" (click)="addFilaSoporte()">
-          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar fila
-        </button>
-      </div>
-    </div>
-    <!-- Observaciones, Instaladores y Pagos -->
-<div class="observaciones-box flex-column p-2">
-  <div class="fila-final mt-1">
-
-    <!-- Columna izquierda: instaladores -->
-    <div class="instaladores-section">
-      <label class="bg-blue text-white p-1 inline-block mb-1">INSTALADOR (ES):</label>
-
-      <div formArrayName="instaladores" class="flex-column gap-1">
-        <div *ngFor="let control of instaladores.controls; let i = index" class="flex-row items-center gap-1">
-          <select [formControlName]="i" class="flex-1 min-w-100">
-            <option value="">Seleccione instalador...</option>
-            <option *ngFor="let emp of listaEmpleados" [value]="emp.id">{{ emp.nombre }}</option>
-          </select>
-          <button type="button" class="btn-delete" (click)="removeInstalador(i)"
-                  *ngIf="instaladores.length > 1" title="Eliminar instalador">✕</button>
+              <button type="button" class="btn-quitar" (click)="removeInstalador(i)"
+                      *ngIf="instaladores.length > 1" title="Quitar instalador" aria-label="Quitar instalador">✕</button>
+              <small class="msg" *ngIf="invalidoCtrl(control)">Elige un instalador o quita esta fila</small>
+            </div>
+          </div>
+          <div><button type="button" class="btn-agregar" (click)="addInstalador()">+ Agregar instalador</button></div>
         </div>
       </div>
 
-      <div class="add-row-container">
-        <button type="button" class="btn-add" (click)="addInstalador()">
-          <span style="font-size: 14px; font-weight: bold;">+</span> Agregar instalador
-        </button>
+      <div class="cierre-der">
+        <div class="field" [class.is-invalid]="invalido('formaPago')">
+          <span class="lbl">Forma de pago <b class="req">*</b></span>
+          <div class="chips" id="f-formaPago" tabindex="-1">
+            <label class="chip" *ngFor="let p of formasPago">
+              <input type="radio" name="formaPago" formControlName="formaPago" [value]="p"><span>{{ p }}</span>
+            </label>
+          </div>
+          <small class="msg" *ngIf="invalido('formaPago')">Elige cómo pagará el cliente</small>
+        </div>
+
+        <dl class="resumen">
+          <div><dt>Subtotal</dt><dd>{{ subtotal | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
+          <div><dt>I.V.A.</dt><dd>{{ ivaTotal | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
+          <div class="resumen-total"><dt>Total a pagar</dt><dd>{{ totalPagar | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
+        </dl>
       </div>
     </div>
+  </section>
 
-    <!-- Columna derecha: pagos -->
-    <div class="pagos-col">
-      <div class="campo-pago">
-        <label class="bg-orange">FORMA DE PAGO:</label>
-        <select formControlName="formaPago">
-          <option value="">Seleccione...</option>
-          <option value="Efectivo">Efectivo</option>
-          <option value="Transferencia">Transferencia</option>
-          <option value="Tarjeta">Tarjeta</option>
-        </select>
+  <!-- Barra fija: avance + acciones -->
+  <div class="barra">
+    <div class="avance">
+      <div class="avance-texto">
+        <ng-container *ngIf="faltantes.length; else listo">
+          Faltan {{ faltantes.length }} dato{{ faltantes.length > 1 ? 's' : '' }}
+          <button type="button" class="link" (click)="irAlSiguiente()">Ir al siguiente</button>
+        </ng-container>
+        <ng-template #listo>Todo listo para guardar</ng-template>
       </div>
-      <div class="campo-pago">
-        <label class="bg-blue">SUBTOTAL:</label>
-        <input type="text" class="text-right" readonly [value]="subtotal | currency:'USD':'symbol':'1.2-2'">
-      </div>
-      <div class="campo-pago">
-        <label class="bg-blue">TOTAL A PAGAR:</label>
-        <input type="text" class="text-right font-bold text-lg" readonly [value]="totalPagar | currency:'USD':'symbol':'1.2-2'">
+      <div class="avance-pista" role="progressbar" [attr.aria-valuenow]="progreso" aria-valuemin="0" aria-valuemax="100">
+        <div class="avance-relleno" [style.width.%]="progreso" [class.completo]="!faltantes.length"></div>
       </div>
     </div>
-
+    <div class="barra-total">
+      <span>Total</span>{{ totalPagar | currency:'MXN':'symbol-narrow':'1.2-2' }}
+    </div>
+    <div class="acciones">
+      <button type="submit" class="btn btn-guardar">Guardar</button>
+      <button type="button" class="btn btn-orden">Orden de servicio</button>
+      <button type="button" class="btn btn-salir" (click)="goToMain()">Salir</button>
+    </div>
   </div>
-</div>
-
-<div class="action-buttons">
-  <button type="submit" class="btn btn-orange">Guardar</button>
-  <button type="button" class="btn btn-green">Orden de Servicio</button>
-  <button type="button" class="btn btn-red" (click)="goToMain()">Salir</button>
-</div>
-  
-</section>
 </form>
 
 <app-footer></app-footer>
