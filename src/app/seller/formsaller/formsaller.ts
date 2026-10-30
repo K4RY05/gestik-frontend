@@ -144,8 +144,8 @@ export class Formsaller implements OnInit {
       disponibilidad: [''],
 
       // IVA (servicio y material; los soportes van sin IVA)
-      ivaServicio: [16],
-      ivaMaterial: [16],
+      ivaServicio: [0],
+      ivaMaterial: [0],
 
       // Cierre
       observaciones: [''],
