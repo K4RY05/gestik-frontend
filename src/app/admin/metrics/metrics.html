@@ -1,1 +1,279 @@
-<p>metrics works!</p>
+<app-navbar></app-navbar>
+<ng-template #donaTpl let-d let-moneda="moneda" let-unidad="unidad">
+  <div class="dona-caja">
+    <svg viewBox="0 0 200 200" class="dona" role="img" [attr.aria-label]="'Distribución de ' + unidad">
+      <circle cx="100" cy="100" [attr.r]="RADIO" class="dona-fondo" />
+      @for (s of d.segs; track s.label) {
+        @if (s.valor > 0) {
+          <circle cx="100" cy="100" [attr.r]="RADIO" class="dona-seg" transform="rotate(-90 100 100)"
+                  [style.stroke]="s.color"
+                  [attr.stroke-dasharray]="s.dash + ' ' + (CIRC - s.dash)"
+                  [attr.stroke-dashoffset]="-s.offset">
+            <title>{{ s.label }}: {{ s.pct.toFixed(1) }}%</title>
+          </circle>
+        }
+      }
+      <text x="100" y="98" text-anchor="middle" class="dona-num">{{ moneda ? dinero(d.total) : d.total }}</text>
+      <text x="100" y="118" text-anchor="middle" class="dona-txt">{{ unidad }}</text>
+    </svg>
+    <ul class="leyenda">
+      @for (s of d.segs; track s.label) {
+        <li>
+          <i class="punto" [style.background]="s.color"></i>
+          <span class="ley-nombre">{{ s.label }}</span>
+          <strong>{{ s.pct.toFixed(0) }}%</strong>
+        </li>
+      }
+    </ul>
+  </div>
+</ng-template>
+
+<!-- Plantilla reutilizable: barras horizontales -->
+<ng-template #barrasTpl let-items let-color="color">
+  <ul class="barras">
+    @for (b of items; track b.label) {
+      <li>
+        <span class="barra-nombre">{{ b.label }}</span>
+        <span class="pista"><span class="relleno" [style.width.%]="b.pct" [style.background]="color"></span></span>
+        <strong class="barra-valor">{{ b.texto }}</strong>
+      </li>
+    } @empty {
+      <li class="vacio">Sin datos en este periodo.</li>
+    }
+  </ul>
+</ng-template>
+
+<main class="tablero">
+  <!-- ============ Cabecera ============ -->
+  <header class="cabecera">
+    <div class="titulo">
+      <h1>Control de folios</h1>
+      <p class="sub">
+        {{ kpis().folios }} folios en {{ etiquetaPeriodo() }}
+        @if (sucursal() !== 'todas') { en la sucursal {{ sucursal() }} }
+      </p>
+    </div>
+
+    <nav class="acciones" aria-label="Accesos rápidos">
+      <a (click)="goToUser()" class="btn btn-primario">Crear usuario</a>
+      <a (click)="goToProducts()" class="btn">Ver productos</a>
+    </nav>
+  </header>
+
+  <!-- ============ Filtros ============ -->
+  <section class="filtros" aria-label="Filtros">
+    <div class="segmentos" role="group" aria-label="Periodo">
+      @for (p of periodos; track p.dias) {
+        <button type="button" [class.activo]="periodo() === p.dias" [attr.aria-pressed]="periodo() === p.dias"
+                (click)="periodo.set(p.dias)">{{ p.texto }}</button>
+      }
+    </div>
+    <label class="selector">
+      <span>Sucursal</span>
+      <select [value]="sucursal()" (change)="sucursal.set($any($event.target).value)">
+        <option value="todas">Todas las sucursales</option>
+        @for (s of sucursales(); track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </label>
+  </section>
+
+  <!-- ============ KPIs ============ -->
+  <section class="kpis" aria-label="Indicadores principales">
+    <div class="kpi">
+      <span class="kpi-n">{{ kpis().folios }}</span>
+      <span class="kpi-t">Folios</span>
+      <span class="kpi-s">{{ kpis().completados }} completados</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-n">{{ dinero(kpis().ingresos) }}</span>
+      <span class="kpi-t">Ingresos</span>
+      <span class="kpi-s">sin contar cancelados</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-n">{{ dinero(kpis().ticket) }}</span>
+      <span class="kpi-t">Ticket promedio</span>
+      <span class="kpi-s">{{ kpis().unidades }} productos vendidos</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-n">{{ kpis().clientes }}</span>
+      <span class="kpi-t">Clientes atendidos</span>
+      <span class="kpi-s">con al menos un folio</span>
+    </div>
+    <div class="kpi kpi-alerta">
+      <span class="kpi-n">{{ kpis().cancelados }}</span>
+      <span class="kpi-t">Cancelados</span>
+      <span class="kpi-s">{{ kpis().tasaCancel.toFixed(1) }}% del total</span>
+    </div>
+    <div class="kpi kpi-aviso">
+      <span class="kpi-n">{{ kpis().sinTicket }}</span>
+      <span class="kpi-t">Sin ticket</span>
+      <span class="kpi-s">requieren captura</span>
+    </div>
+    <div class="kpi kpi-aviso">
+      <span class="kpi-n">{{ kpis().sinInstalador }}</span>
+      <span class="kpi-t">Sin instalador</span>
+      <span class="kpi-s">pendientes de asignar</span>
+    </div>
+    <div class="kpi kpi-alerta">
+      <span class="kpi-n">{{ kpis().vencidos }}</span>
+      <span class="kpi-t">Vencidos</span>
+      <span class="kpi-s">fecha programada pasada</span>
+    </div>
+  </section>
+
+  <div class="rejilla">
+    <!-- ============ Tendencia ============ -->
+    <section class="panel c8">
+      <h2>Folios creados {{ tendencia().semanal ? 'por semana' : 'por día' }}</h2>
+      <svg class="linea" [attr.viewBox]="'0 0 ' + tendencia().W + ' ' + tendencia().H" role="img"
+           aria-label="Evolución de folios en el tiempo">
+        @for (g of tendencia().grid; track g.y) {
+          <line [attr.x1]="tendencia().PX" [attr.x2]="tendencia().W - tendencia().PX" [attr.y1]="g.y" [attr.y2]="g.y" class="grid" />
+          <text [attr.x]="tendencia().PX - 8" [attr.y]="g.y + 4" text-anchor="end" class="eje">{{ g.label }}</text>
+        }
+        <path [attr.d]="tendencia().area" class="area" />
+        <path [attr.d]="tendencia().linea" class="trazo" />
+        @for (p of tendencia().puntos; track $index) {
+          <circle [attr.cx]="p.x" [attr.cy]="p.y" r="3.5" class="pt"><title>{{ p.label }}: {{ p.valor }} folios</title></circle>
+        }
+        @for (e of tendencia().etiquetas; track $index) {
+          <text [attr.x]="e.x" [attr.y]="tendencia().H - 4" text-anchor="middle" class="eje">{{ e.label }}</text>
+        }
+      </svg>
+    </section>
+
+    <!-- ============ Estatus ============ -->
+    <section class="panel c4">
+      <h2>Estatus de los folios</h2>
+      <ng-container [ngTemplateOutlet]="donaTpl"
+        [ngTemplateOutletContext]="{ $implicit: estatusDona(), moneda: false, unidad: 'folios' }" />
+    </section>
+
+    <!-- ============ Sucursales ============ -->
+    <section class="panel c7">
+      <h2>Folios por sucursal</h2>
+      <p class="nota">La franja roja marca la parte cancelada de cada sucursal.</p>
+      <ul class="sucursales">
+        @for (s of porSucursal(); track s.sucursal) {
+          <li>
+            <div class="suc-cab">
+              <strong>{{ s.sucursal }}</strong>
+              <span>{{ s.ingresosTxt }}</span>
+            </div>
+            <div class="suc-pista">
+              <div class="suc-barra" [style.width.%]="s.pct">
+                <div class="suc-cancel" [style.width.%]="s.pctCancel"></div>
+              </div>
+              <span class="suc-num">{{ s.folios }}</span>
+            </div>
+            <span class="suc-pie">{{ s.cancel }} cancelados</span>
+          </li>
+        } @empty {
+          <li class="vacio">Sin datos en este periodo.</li>
+        }
+      </ul>
+    </section>
+
+    <!-- ============ Vendedores ============ -->
+    <section class="panel c5">
+      <h2>Vendedores con más folios</h2>
+      @if (vendedores()[0]; as v) {
+        <p class="lider"><strong>{{ v.label }}</strong> lidera con {{ v.valor }} folios.</p>
+      }
+      <ng-container [ngTemplateOutlet]="barrasTpl"
+        [ngTemplateOutletContext]="{ $implicit: vendedores(), color: 'var(--primario)' }" />
+    </section>
+
+    <!-- ============ Productos ============ -->
+    <section class="panel c6">
+      <h2>Productos más vendidos</h2>
+      <p class="nota">Por unidades, sin folios cancelados.</p>
+      <ng-container [ngTemplateOutlet]="barrasTpl"
+        [ngTemplateOutletContext]="{ $implicit: productosTop(), color: 'var(--acento)' }" />
+    </section>
+
+    <!-- ============ Instaladores ============ -->
+    <section class="panel c6">
+      <h2>Instaladores con más folios</h2>
+      @if (instaladores()[0]; as i) {
+        <p class="lider"><strong>{{ i.label }}</strong> lidera con {{ i.valor }} folios asignados.</p>
+      }
+      <ng-container [ngTemplateOutlet]="barrasTpl"
+        [ngTemplateOutletContext]="{ $implicit: instaladores(), color: 'var(--info)' }" />
+    </section>
+
+    <!-- ============ Donas ============ -->
+    <section class="panel c6">
+      <h2>Ventas por categoría</h2>
+      <ng-container [ngTemplateOutlet]="donaTpl"
+        [ngTemplateOutletContext]="{ $implicit: categoriaDona(), moneda: true, unidad: 'vendido' }" />
+    </section>
+
+    <section class="panel c6">
+      <h2>Ingresos por método de pago</h2>
+      <ng-container [ngTemplateOutlet]="donaTpl"
+        [ngTemplateOutletContext]="{ $implicit: metodoDona(), moneda: true, unidad: 'cobrado' }" />
+    </section>
+
+
+    <!-- ============ Ingresos, clientes, zonas ============ -->
+    <section class="panel c6">
+      <h2>Productos que más ingresan</h2>
+      <ng-container [ngTemplateOutlet]="barrasTpl"
+        [ngTemplateOutletContext]="{ $implicit: productosIngreso(), color: 'var(--primario)' }" />
+    </section>
+
+
+    <section class="panel c6">
+      <h2>Alcaldías con más folios</h2>
+      <ng-container [ngTemplateOutlet]="barrasTpl"
+        [ngTemplateOutletContext]="{ $implicit: alcaldiasTop(), color: 'var(--acento)' }" />
+    </section>
+
+    <!-- ============ Tablas de atención ============ -->
+    <section class="panel c6 panel-alerta">
+      <h2>Folios cancelados recientes</h2>
+      <div class="tabla-caja">
+        <table class="tabla">
+          <thead>
+            <tr><th>Folio</th><th>Fecha</th><th>Vendedor</th><th>Sucursal</th><th class="der">Total</th></tr>
+          </thead>
+          <tbody>
+            @for (r of canceladasFilas(); track r.folio) {
+              <tr>
+                <td>{{ r.folio }}</td><td>{{ r.fecha }}</td><td>{{ r.vendedor }}</td><td>{{ r.sucursal }}</td>
+                <td class="der">{{ r.total }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vacio">No hay folios cancelados en este periodo.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel c6 panel-aviso">
+      <h2>Folios sin ticket</h2>
+      <div class="tabla-caja">
+        <table class="tabla">
+          <thead>
+            <tr><th>Folio</th><th>Fecha</th><th>Vendedor</th><th>Sucursal</th><th class="der">Total</th></tr>
+          </thead>
+          <tbody>
+            @for (r of sinTicketFilas(); track r.folio) {
+              <tr>
+                <td>{{ r.folio }}</td><td>{{ r.fecha }}</td><td>{{ r.vendedor }}</td><td>{{ r.sucursal }}</td>
+                <td class="der">{{ r.total }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="vacio">Todos los folios tienen ticket.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<app-footer></app-footer>
