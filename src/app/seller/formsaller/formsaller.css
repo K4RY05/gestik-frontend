@@ -82,7 +82,7 @@ input, select, textarea {
   background: #fff; border: 1px solid #b8c1cd; border-radius: 6px;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-input[readonly], input:disabled { background: #eef1f5; }
+input[readonly], input:disabled { background: #eef1f5; color: var(--muted); cursor: not-allowed; }
 textarea { resize: vertical; }
 input::placeholder, textarea::placeholder { color: #9aa5b3; }
 
@@ -164,11 +164,25 @@ input.is-invalid:focus-visible, select.is-invalid:focus-visible { box-shadow: 0 
 .instalador { display: grid; grid-template-columns: minmax(200px, 1fr) auto; gap: 4px 6px; align-items: center; flex: 1 1 240px; }
 .instalador .msg { grid-column: 1; }
 
+/* Resumen de montos */
 .resumen { margin: 0; }
-.resumen div { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.resumen div { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); }
 .resumen dt { color: var(--muted); }
+.resumen dt label { font: inherit; color: inherit; }
 .resumen dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.resumen input { width: 130px; min-height: 36px; text-align: right; }
 .resumen-total dt, .resumen-total dd { color: var(--ink); font-size: 1.2rem; font-weight: 700; }
+.resumen-saldo dt, .resumen-saldo dd { color: var(--orange); font-size: 1.05rem; font-weight: 700; }
+.dd-multi { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+
+.btn-cobrar {
+  font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  min-height: 36px; padding: 0 10px; white-space: nowrap;
+  background: #fff; color: var(--ok);
+  border: 1px solid var(--ok); border-radius: 6px;
+}
+.btn-cobrar:hover:not(:disabled) { background: var(--ok-bg); }
+.btn-cobrar:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ---------- Barra fija ---------- */
 .barra {
@@ -186,6 +200,7 @@ input.is-invalid:focus-visible, select.is-invalid:focus-visible { box-shadow: 0 
 .avance-relleno.completo { background: var(--ok); }
 .barra-total { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .barra-total span { display: block; font-size: 0.72rem; font-weight: 600; color: var(--muted); }
+.barra-saldo, .barra-saldo span { color: var(--orange); }
 
 .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn { font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; min-height: 42px; padding: 0 14px; border-radius: 6px; border: 1px solid transparent; color: #fff; }
@@ -220,7 +235,7 @@ input.is-invalid:focus-visible, select.is-invalid:focus-visible { box-shadow: 0 
 
   .barra { flex-wrap: wrap; gap: 8px 12px; }
   .avance { flex: 1 1 100%; order: 1; }
-  .barra-total { order: 2; margin-right: auto; }
+  .barra-total { order: 2; font-size: 1.05rem; }
   .acciones { order: 3; width: 100%; }
   .btn { flex: 1 1 auto; padding: 0 10px; }
 }

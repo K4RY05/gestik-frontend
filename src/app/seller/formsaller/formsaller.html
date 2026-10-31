@@ -14,10 +14,9 @@
         <label for="f-folio">Folio</label>
         <input id="f-folio" type="text" formControlName="folio" class="folio">
       </div>
-      <div class="field field-sm" [class.is-invalid]="invalido('fecha')">
-        <label for="f-fecha">Fecha <b class="req">*</b></label>
-        <input id="f-fecha" type="date" formControlName="fecha">
-        <small class="msg" *ngIf="invalido('fecha')">{{ mensaje('fecha') }}</small>
+      <div class="field field-sm">
+        <label for="f-fecha">Fecha de creación</label>
+        <input id="f-fecha" type="date" formControlName="fecha" title="Se asigna automáticamente y no se puede cambiar">
       </div>
     </div>
   </header>
@@ -76,12 +75,13 @@
         </div>
 
         <div class="field span-2" [class.is-invalid]="invalido('estatus')">
-          <span class="lbl">Estatus <b class="req">*</b></span>
+          <span class="lbl">Estatus de pago <b class="req">*</b></span>
           <div class="chips" id="f-estatus" tabindex="-1">
             <label class="chip" *ngFor="let e of estatusOpc">
               <input type="radio" name="estatus" formControlName="estatus" [value]="e"><span>{{ e }}</span>
             </label>
           </div>
+          <small class="ayuda">Va ligado al anticipo (en Cierre): Pagado lo iguala al total, Sin pagar lo quita.</small>
           <small class="msg" *ngIf="invalido('estatus')">Elige un estatus</small>
         </div>
       </div>
@@ -332,7 +332,22 @@
           <div><dt>Subtotal</dt><dd>{{ subtotal | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
           <div><dt>I.V.A.</dt><dd>{{ ivaTotal | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
           <div class="resumen-total"><dt>Total a pagar</dt><dd>{{ totalPagar | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
+
+          <div>
+            <dt><label for="f-anticipo">Anticipo / pagado</label></dt>
+            <dd class="dd-multi">
+              <button type="button" class="btn-cobrar" (click)="cobrarTodo()" [disabled]="!totalPagar">Pagó todo</button>
+              <input id="f-anticipo" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"
+                     formControlName="anticipo"
+                     [class.is-invalid]="invalido('anticipo') || registroForm.hasError('anticipoMayor') || registroForm.hasError('estatusAnticipo')">
+            </dd>
+          </div>
+
+          <div class="resumen-saldo"><dt>Saldo por cobrar</dt><dd>{{ saldo | currency:'MXN':'symbol-narrow':'1.2-2' }}</dd></div>
         </dl>
+        <small class="msg" *ngIf="registroForm.hasError('anticipoMayor')">El anticipo no puede ser mayor al total.</small>
+        <small class="msg" *ngIf="registroForm.hasError('estatusAnticipo') && !registroForm.hasError('anticipoMayor')">{{ mensajeEstatus }}</small>
+        <small class="msg" *ngIf="invalido('anticipo')">{{ mensaje('anticipo') }}</small>
       </div>
     </div>
   </section>
@@ -353,6 +368,9 @@
     </div>
     <div class="barra-total">
       <span>Total</span>{{ totalPagar | currency:'MXN':'symbol-narrow':'1.2-2' }}
+    </div>
+    <div class="barra-total barra-saldo">
+      <span>Saldo</span>{{ saldo | currency:'MXN':'symbol-narrow':'1.2-2' }}
     </div>
     <div class="acciones">
       <button type="submit" class="btn btn-guardar">Guardar</button>

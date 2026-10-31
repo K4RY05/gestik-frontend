@@ -16,8 +16,39 @@ interface Pendiente {
   id: string; // id del elemento HTML al que se salta
 }
 
+interface Totales {
+  subtotal: number;
+  iva: number;
+  total: number;
+  anticipo: number;
+  saldo: number;
+}
+
 const n = (v: unknown): number => Number(v) || 0;
+const redondear = (x: number): number => Math.round(x * 100) / 100;
 const FILAS_INICIALES = 2;
+
+// ==========================================
+// CÁLCULO DE TOTALES
+// ==========================================
+
+/** Subtotal, IVA, total, anticipo y saldo a partir del valor del formulario (los soportes van sin IVA). */
+function calcularTotales(v: any): Totales {
+  const suma = (filas: any[], f: (r: any) => number) => (filas ?? []).reduce((s, r) => s + f(r ?? {}), 0);
+
+  const baseServicio = suma(v?.datosServicio, r => n(r.muroFirme) + n(r.plafonFalso) + n(r.techo) + n(r.desmontaje));
+  const baseMaterial = suma(v?.materiales, r => n(r.cantidad) * n(r.precioUnitario));
+  const baseSoportes = suma(v?.soportes, r => n(r.cantidad) * n(r.precioUnitario));
+
+  const subtotal = redondear(baseServicio + baseMaterial + baseSoportes);
+  const iva = redondear(baseServicio * n(v?.ivaServicio) / 100 + baseMaterial * n(v?.ivaMaterial) / 100);
+  const total = redondear(subtotal + iva);
+
+  const anticipo = Math.max(n(v?.anticipo), 0);
+  const saldo = redondear(Math.max(total - anticipo, 0));
+
+  return { subtotal, iva, total, anticipo, saldo };
+}
 
 // ==========================================
 // VALIDADORES
@@ -58,6 +89,24 @@ function validarConceptos(f: AbstractControl): ValidationErrors | null {
   return servicios || materiales || soportes ? null : { sinConceptos: true };
 }
 
+/** El anticipo no puede ser mayor al total. */
+function validarAnticipo(f: AbstractControl): ValidationErrors | null {
+  const t = calcularTotales(f.value);
+  return t.anticipo > t.total ? { anticipoMayor: true } : null;
+}
+
+/** El estatus de pago debe coincidir con el anticipo. */
+function validarEstatus(f: AbstractControl): ValidationErrors | null {
+  const t = calcularTotales(f.value);
+  if (t.total <= 0) return null;
+  const est = f.value?.estatus;
+  const mal =
+    (est === 'Pagado' && t.anticipo < t.total) ||
+    (est === 'Falta por pagar' && !(t.anticipo > 0 && t.anticipo < t.total)) ||
+    (est === 'Sin pagar' && t.anticipo > 0);
+  return mal ? { estatusAnticipo: true } : null;
+}
+
 @Component({
   selector: 'app-formsaller',
   standalone: true,
@@ -72,6 +121,7 @@ export class Formsaller implements OnInit {
   guardadoOk = false;
   faltantes: Pendiente[] = [];
   progreso = 0;
+  totales: Totales = calcularTotales({});
 
   readonly hoy = this.fechaISO();
 
@@ -98,8 +148,8 @@ export class Formsaller implements OnInit {
   ];
 
   // Campos obligatorios (para el resumen de pendientes y el progreso)
+  // La fecha de creación no va aquí: se asigna sola y está bloqueada.
   private readonly requeridos: { key: string; label: string; seccion: Seccion }[] = [
-    { key: 'fecha', label: 'Fecha del registro', seccion: 'orden' },
     { key: 'medioContacto', label: 'Medio de contacto', seccion: 'orden' },
     { key: 'empleadoResponsable', label: 'Empleado responsable', seccion: 'orden' },
     { key: 'fechaInstalacion', label: 'Fecha de instalación', seccion: 'orden' },
@@ -120,7 +170,7 @@ export class Formsaller implements OnInit {
     this.registroForm = this.fb.group({
       // Orden de servicio
       folio: [{ value: '(New)', disabled: true }],
-      fecha: [this.hoy, Validators.required],
+      fecha: [{ value: this.hoy, disabled: true }],
       medioContacto: ['', Validators.required],
       empleadoResponsable: ['', Validators.required],
       fechaInstalacion: ['', Validators.required],
@@ -137,7 +187,7 @@ export class Formsaller implements OnInit {
       cp: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       referencias: [''],
 
-      // Tablas dinámicas (4 filas iniciales, como el sistema anterior)
+      // Tablas dinámicas
       datosServicio: this.fb.array(Array.from({ length: FILAS_INICIALES }, () => this.crearFilaServicio())),
       materiales: this.fb.array(Array.from({ length: FILAS_INICIALES }, () => this.crearFilaMaterial())),
       soportes: this.fb.array(Array.from({ length: FILAS_INICIALES }, () => this.crearFilaSoporte())),
@@ -150,8 +200,13 @@ export class Formsaller implements OnInit {
       // Cierre
       observaciones: [''],
       formaPago: ['', Validators.required],
+      anticipo: [null as number | null, Validators.min(0)],
       instaladores: this.fb.array([this.fb.control('', Validators.required)])
-    }, { validators: validarConceptos });
+    }, { validators: [validarConceptos, validarAnticipo, validarEstatus] });
+
+    // Estatus y anticipo van ligados en los dos sentidos
+    this.registroForm.get('estatus')!.valueChanges.subscribe(v => this.anticipoDesdeEstatus(v));
+    this.registroForm.get('anticipo')!.valueChanges.subscribe(v => this.estatusDesdeAnticipo(n(v)));
 
     this.registroForm.valueChanges.subscribe(() => this.recalcular());
     this.recalcular();
@@ -183,17 +238,10 @@ export class Formsaller implements OnInit {
   }
 
   /** Suma de importes sin IVA de las tres tablas. */
-  get subtotal(): number {
-    return this.totServicio.base + this.totMaterial.base + this.totSoportes.base;
-  }
-
-  get ivaTotal(): number {
-    return this.totServicio.iva + this.totMaterial.iva + this.totSoportes.iva;
-  }
-
-  get totalPagar(): number {
-    return this.subtotal + this.ivaTotal;
-  }
+  get subtotal(): number { return this.totales.subtotal; }
+  get ivaTotal(): number { return this.totales.iva; }
+  get totalPagar(): number { return this.totales.total; }
+  get saldo(): number { return this.totales.saldo; }
 
   // ==========================================
   // FILAS DINÁMICAS
@@ -243,6 +291,50 @@ export class Formsaller implements OnInit {
   removeInstalador(i: number): void { if (this.instaladores.length > 1) this.instaladores.removeAt(i); }
 
   // ==========================================
+  // PAGO: ESTATUS LIGADO AL ANTICIPO
+  // ==========================================
+  /** Marca el total como pagado. */
+  cobrarTodo(): void {
+    const c = this.registroForm.get('anticipo')!;
+    c.setValue(this.totales.total || null);
+    c.markAsTouched();
+  }
+
+  /** Al cambiar el anticipo se actualiza el estatus. */
+  private estatusDesdeAnticipo(anticipo: number): void {
+    const total = this.totales.total;
+    if (total <= 0) return;
+    const estatus = anticipo >= total ? 'Pagado' : anticipo > 0 ? 'Falta por pagar' : 'Sin pagar';
+    this.registroForm.get('estatus')!.setValue(estatus, { emitEvent: false });
+  }
+
+  /** Al elegir el estatus se ajusta el anticipo. */
+  private anticipoDesdeEstatus(estatus: string): void {
+    const anticipo = this.registroForm.get('anticipo')!;
+    const total = this.totales.total;
+
+    if (estatus === 'Pagado') {
+      anticipo.setValue(total > 0 ? total : null, { emitEvent: false });
+    } else if (estatus === 'Sin pagar') {
+      anticipo.setValue(null, { emitEvent: false });
+    } else if (estatus === 'Falta por pagar') {
+      const a = n(anticipo.value);
+      if (a <= 0 || (total > 0 && a >= total)) {
+        anticipo.setValue(null, { emitEvent: false });
+        this.irA('f-anticipo'); // para que capture cuánto pagó
+      }
+    }
+  }
+
+  /** Texto de ayuda cuando el anticipo no cuadra con el estatus. */
+  get mensajeEstatus(): string {
+    const est = this.registroForm.get('estatus')?.value;
+    if (est === 'Falta por pagar') return 'Captura cuánto pagó el cliente (menos que el total).';
+    if (est === 'Sin pagar') return 'Sin pagar no lleva anticipo.';
+    return 'Pagado requiere que el anticipo sea igual al total.';
+  }
+
+  // ==========================================
   // VALIDACIÓN VISUAL
   // ==========================================
   invalido(key: string): boolean {
@@ -267,12 +359,23 @@ export class Formsaller implements OnInit {
     const c = this.registroForm.get(key);
     if (c?.hasError('required')) return 'Campo obligatorio';
     if (c?.hasError('minlength')) return 'Escribe al menos 3 caracteres';
+    if (c?.hasError('min')) return 'No puede ser negativo';
     if (c?.hasError('pattern')) return key === 'cp' ? 'Debe tener 5 dígitos' : 'Debe tener 10 dígitos';
     return 'Valor no válido';
   }
 
   private recalcular(): void {
     const f = this.registroForm;
+
+    const totalPrevio = this.totales.total;
+    this.totales = calcularTotales(f.value);
+
+    // Si está marcado como Pagado y el total cambia, el anticipo sigue al total
+    if (f.get('estatus')!.value === 'Pagado' && this.totales.total > 0 && this.totales.total !== totalPrevio) {
+      f.get('anticipo')!.setValue(this.totales.total, { emitEvent: false });
+      this.totales = calcularTotales(f.value);
+    }
+
     const out: Pendiente[] = [];
 
     for (const r of this.requeridos) {
@@ -306,6 +409,16 @@ export class Formsaller implements OnInit {
 
     if (f.hasError('sinConceptos')) {
       out.push({ label: 'Agrega al menos un servicio, material o soporte', seccion: 'conceptos', id: 'svc-0-tamanoPantallas' });
+    }
+
+    if (f.hasError('anticipoMayor')) {
+      out.push({ label: 'El anticipo es mayor al total', seccion: 'cierre', id: 'f-anticipo' });
+    }
+    if (f.hasError('estatusAnticipo')) {
+      out.push({ label: 'El anticipo no coincide con el estatus', seccion: 'cierre', id: 'f-anticipo' });
+    }
+    if (f.get('anticipo')?.invalid) {
+      out.push({ label: 'Anticipo', seccion: 'cierre', id: 'f-anticipo' });
     }
 
     this.faltantes = out;
@@ -386,7 +499,8 @@ export class Formsaller implements OnInit {
       return;
     }
 
-    const datosFinales = this.registroForm.getRawValue();
+    // getRawValue incluye la fecha de creación (bloqueada) y los totales de cada fila
+    const datosFinales = { ...this.registroForm.getRawValue(), totales: this.totales };
     console.log('Datos listos para enviar a la base de datos:', datosFinales);
     this.guardadoOk = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });

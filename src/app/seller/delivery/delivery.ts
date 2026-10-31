@@ -184,7 +184,7 @@ export class Delivery implements OnInit {
 
     this.registroForm = this.fb.group({
       folio: [{ value: b.folio, disabled: true }],
-      fecha: [b.fecha, Validators.required],
+       fecha: [{ value: this.hoy, disabled: true }],
 
       // Sucursal y venta (sucursal y vendedor se recuerdan de la última captura)
       sucursalSalida: [b.sucursalSalida, Validators.required],
