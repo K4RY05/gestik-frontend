@@ -7,6 +7,7 @@ import {
 import { Navbar } from '../../shared/navbar/navbar';
 import { Footer } from '../../shared/footer/footer';
 import { Router } from '@angular/router';
+import  { FormSellerPdf } from '../../shared/pdf-templates/form-seller-pdf/form-seller-pdf';
 
 type Seccion = 'orden' | 'cliente' | 'conceptos' | 'cierre';
 
@@ -110,7 +111,7 @@ function validarEstatus(f: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-formsaller',
   standalone: true,
-  imports: [CommonModule, Navbar, Footer, ReactiveFormsModule],
+  imports: [CommonModule, Navbar, Footer, ReactiveFormsModule, FormSellerPdf],
   styleUrl: './formsaller.css',
   templateUrl: './formsaller.html',
 })
@@ -124,6 +125,20 @@ export class Formsaller implements OnInit {
   totales: Totales = calcularTotales({});
 
   readonly hoy = this.fechaISO();
+    verPdf = false;
+  datosPdf: any = null;
+
+abrirPdf(): void {
+  this.intentoEnvio = true;
+  this.recalcular();
+  if (this.registroForm.invalid) {
+    this.registroForm.markAllAsTouched();
+    this.irAlSiguiente();
+    return;
+  }
+  this.datosPdf = { ...this.registroForm.getRawValue(), totales: this.totales };
+  this.verPdf = true;
+}
 
   // Catálogos
   listaEmpleados = [

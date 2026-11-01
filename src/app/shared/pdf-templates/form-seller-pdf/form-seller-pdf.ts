@@ -1,70 +1,169 @@
-import { Injectable } from '@angular/core';
+import {
+  Component, ElementRef, EventEmitter, Input, OnChanges,
+  Output, SimpleChanges, ViewChild,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
 
-/** Genera el PDF con la impresión nativa del navegador (sin librerías). */
-@Injectable({ providedIn: 'root' })
-export class PdfService {
+@Component({
+  selector: 'app-form-seller-pdf',
+  standalone: true,
+  imports: [CommonModule],
+  styleUrl: './form-seller-pdf.css',
+  templateUrl: './form-seller-pdf.html',
+})
+export class FormSellerPdf implements OnChanges {
+  /** Resultado de registroForm.getRawValue() + totales */
+  @Input() datos: any = null;
+  @Input() empleados: { id: number; nombre: string }[] = [];
+  /** Si es true, descarga el PDF apenas se abre la vista previa */
+  @Input() autoDescargar = true;
+  @Output() cerrar = new EventEmitter<void>();
 
-  /** Texto limpio para nombre de archivo: sin acentos, espacios ni símbolos. */
-  private limpiar(t: unknown, vacio: string): string {
-    const s = String(t ?? '')
+  @ViewChild('hoja') hoja!: ElementRef<HTMLElement>;
+
+  descargando = false;
+
+  readonly contacto = {
+    telefono: '(55) 5980 3333',
+    telHref: 'tel:+525559803333',
+    email: 'contacto@makaymajo.com.mx',
+    mailHref: 'mailto:contacto@makaymajo.com.mx',
+    web: 'www.instalacion.makaymajo.com.mx',
+    webHref: 'https://www.instalacion.makaymajo.com.mx',
+    poliza: 'https://www.instalacion.makaymajo.com.mx/poliza.pdf',
+  };
+
+  private readonly tamanos: Record<string, string> = {
+    '32-43': '32" - 43"',
+    '49-55': '49" - 55"',
+    '65-75': '65" - 75"',
+    '85+': '85"+',
+  };
+
+  private readonly pesos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+  // ---------- Descarga automática al abrir ----------
+  ngOnChanges(c: SimpleChanges): void {
+    if (c['datos'] && this.datos && this.autoDescargar) {
+      // espera a que Angular pinte la hoja
+      setTimeout(() => this.descargar(), 400);
+    }
+  }
+
+  // ---------- Formato ----------
+  mx(v: unknown): string {
+    return this.pesos.format(Number(v) || 0);
+  }
+
+  /** Muestra un guion cuando el importe es cero */
+  mxGuion(v: unknown): string {
+    return Number(v) ? this.mx(v) : '—';
+  }
+
+  tamano(v: string): string {
+    return this.tamanos[v] ?? v;
+  }
+
+  hora(v: string): string {
+    if (!v) return '';
+    const [h, m] = v.split(':').map(Number);
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  }
+
+  // ---------- Filas con importe ----------
+  get servicios(): any[] {
+    return (this.datos?.datosServicio ?? []).filter((f: any) => Number(f.total) > 0);
+  }
+  get materiales(): any[] {
+    return (this.datos?.materiales ?? []).filter((f: any) => Number(f.total) > 0);
+  }
+  get soportes(): any[] {
+    return (this.datos?.soportes ?? []).filter((f: any) => Number(f.total) > 0);
+  }
+
+  // ---------- Subtotales por sección ----------
+  private suma(filas: any[]): number {
+    return filas.reduce((s, f) => s + (Number(f.total) || 0), 0);
+  }
+
+  get totServicio() {
+    const base = this.suma(this.servicios);
+    const pct = Number(this.datos?.ivaServicio) || 0;
+    return { pct, iva: base * pct / 100, total: base + base * pct / 100 };
+  }
+  get totMaterial() {
+    const base = this.suma(this.materiales);
+    const pct = Number(this.datos?.ivaMaterial) || 0;
+    return { pct, iva: base * pct / 100, total: base + base * pct / 100 };
+  }
+  get totSoportes(): number {
+    return this.suma(this.soportes);
+  }
+
+  // ---------- Nombres ----------
+  private nombreDe(id: unknown): string {
+    return this.empleados.find(e => String(e.id) === String(id))?.nombre ?? '';
+  }
+
+  get instaladoresTxt(): string {
+    return (this.datos?.instaladores ?? [])
+      .map((id: unknown) => this.nombreDe(id))
+      .filter((x: string) => !!x && x !== 'Sin Asignar')
+      .join(', ');
+  }
+
+  // ---------- Nombre del archivo: Folio_colonia_telefono ----------
+  private limpio(v: unknown): string {
+    return String(v ?? '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    return s || vacio;
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
   }
 
-  /** El folio "(New)" aún no es un folio real. */
-  esFolioReal(folio: unknown): boolean {
-    const f = String(folio ?? '').trim();
-    return !!f && !/new/i.test(f);
+  get nombreArchivo(): string {
+    const d = this.datos ?? {};
+    return [d.folio, d.colonia, d.telefono].map(x => this.limpio(x) || 'SN').join('_');
   }
 
-  /** Folio_colonia_telefono.pdf */
-  nombreArchivo(folio: unknown, colonia: unknown, telefono: unknown): string {
-    const f = this.esFolioReal(folio) ? folio : '';
-    return `${this.limpiar(f, 'SinFolio')}_${this.limpiar(colonia, 'SinColonia')}_${this.limpiar(telefono, 'SinTelefono')}.pdf`;
-  }
+  // ---------- Descargar PDF (siempre una sola hoja A4) ----------
+  async descargar(): Promise<void> {
+    if (this.descargando || !this.hoja) return;
+    this.descargando = true;
 
-  /**
-   * Imprime solo la hoja (en un iframe oculto) con el nombre del archivo como título,
-   * para que el diálogo "Guardar como PDF" lo proponga.
-   */
-  async descargar(el: HTMLElement, nombre: string): Promise<void> {
-    const titulo = nombre.replace(/\.pdf$/i, '');   // ya viene sin caracteres raros
-    document.getElementById('pdf-frame')?.remove();
+    const el = this.hoja.nativeElement;
+    el.classList.add('exportando');
 
-    // Copia los estilos de la app (los del componente incluidos) al iframe
-    const estilos = Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map(n => n.outerHTML).join('\n');
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
 
-    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
-<title>${titulo}</title>
-${estilos}
-<style>
-  @page { size: letter; margin: .45in .45in .55in; }
-  html, body { margin: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .hoja { width: 100% !important; }
-</style></head><body>${el.outerHTML}</body></html>`;
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+      });
 
-    const tituloOriginal = document.title;
-    const iframe = document.createElement('iframe');
-    iframe.id = 'pdf-frame';
-    iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      const pageW = pdf.internal.pageSize.getWidth();   // 210
+      const pageH = pdf.internal.pageSize.getHeight();  // 297
 
-    await new Promise<void>(resolve => {
-      iframe.onload = () => {
-        const w = iframe.contentWindow!;
-        const limpiarTodo = () => { document.title = tituloOriginal; iframe.remove(); };
-        w.onafterprint = limpiarTodo;
-        setTimeout(limpiarTodo, 120000);   // por si el navegador no avisa
-        document.title = titulo;           // Chrome toma el título de la página como nombre
-        w.focus();
-        w.print();
-        resolve();
-      };
-      iframe.srcdoc = html;
-      document.body.appendChild(iframe);
-    });
+      // Ajuste proporcional para que todo quepa en una sola hoja
+      const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const x = (pageW - imgW) / 2;
+
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', x, 0, imgW, imgH);
+      pdf.save(`${this.nombreArchivo}.pdf`);
+    } finally {
+      el.classList.remove('exportando');
+      this.descargando = false;
+    }
   }
 }

@@ -374,10 +374,16 @@
     </div>
     <div class="acciones">
       <button type="submit" class="btn btn-guardar">Guardar</button>
-      <button type="button" class="btn btn-orden">Orden de servicio</button>
+      <button type="button" class="btn btn-orden" (click)="abrirPdf()">Orden de servicio</button>
       <button type="button" class="btn btn-salir" (click)="goToMain()">Salir</button>
     </div>
   </div>
 </form>
+<app-form-seller-pdf
+  *ngIf="verPdf"
+  [datos]="datosPdf"
+  [empleados]="listaEmpleados"
+  (cerrar)="verPdf = false">
+</app-form-seller-pdf>
 
 <app-footer></app-footer>
