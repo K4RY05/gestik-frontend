@@ -1,1 +1,357 @@
-<p>delivery works!</p>
+<app-navbar></app-navbar>
+
+<form class="registro" [formGroup]="registroForm" (ngSubmit)="guardar()" novalidate
+      (keydown.enter)="onEnter($event)" (focusin)="seleccionarTodo($event)">
+
+  <!-- Encabezado -->
+  <header class="encabezado">
+    <div>
+      <h1>Formato de entrega</h1>
+      <p class="ayuda">Los campos con <b class="req">*</b> son obligatorios. Enter pasa al siguiente campo.</p>
+    </div>
+    <div class="meta">
+      <div class="field field-sm">
+        <label for="f-folio">Folio de entrega</label>
+        <input id="f-folio" type="text" formControlName="folio" class="folio">
+      </div>
+      <div class="field field-sm" [class.is-invalid]="invalido('fecha')">
+        <label for="f-fecha">Fecha <b class="req">*</b></label>
+        <input id="f-fecha" type="date" formControlName="fecha">
+        <small class="msg" *ngIf="invalido('fecha')">{{ mensaje('fecha') }}</small>
+      </div>
+    </div>
+  </header>
+
+  <div class="alerta alerta-ok" *ngIf="guardadoOk" role="status">
+    <span>Formato de entrega guardado correctamente.</span>
+    <button type="button" class="btn-nuevo" (click)="nuevo()">Capturar otro</button>
+  </div>
+
+  <div class="alerta alerta-error" *ngIf="intentoEnvio && faltantes.length" role="alert">
+    <strong>Faltan {{ faltantes.length }} dato{{ faltantes.length > 1 ? 's' : '' }} para guardar</strong>
+    <div class="alerta-lista">
+      <button type="button" *ngFor="let p of faltantes" (click)="irA(p.id)">{{ p.label }}</button>
+    </div>
+  </div>
+
+  <!-- Sucursal y venta | Cliente -->
+  <div class="par">
+
+    <section class="seccion" [attr.data-estado]="estadoSeccion('venta')">
+      <div class="seccion-head">
+        <h2>Sucursal y venta</h2>
+        <span class="estado">{{ textoSeccion('venta') }}</span>
+      </div>
+
+      <div class="grid">
+        <div class="field span-2" [class.is-invalid]="invalido('sucursalSalida')">
+          <span class="lbl">Sucursal de donde sale la mercancía <b class="req">*</b></span>
+          <div class="chips" id="f-sucursalSalida" tabindex="-1">
+            <label class="chip" *ngFor="let s of sucursales">
+              <input type="radio" name="sucursalSalida" formControlName="sucursalSalida" [value]="s.nombre"><span>{{ s.nombre }}</span>
+            </label>
+          </div>
+          <ng-container *ngIf="datosSucursal('sucursalSalida') as s">
+            <small class="sucursal-info"><span *ngIf="s.direccion">{{ s.direccion }}</span><span *ngIf="s.telefono">Tel. {{ s.telefono }}</span></small>
+          </ng-container>
+          <small class="msg" *ngIf="invalido('sucursalSalida')">Elige la sucursal de salida</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('vendedor')" [class.is-valid]="valido('vendedor')">
+          <label for="f-vendedor">Quién realizó la venta <b class="req">*</b></label>
+          <select id="f-vendedor" formControlName="vendedor">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let emp of listaEmpleados" [value]="emp.id">{{ emp.nombre }}</option>
+          </select>
+          <small class="msg" *ngIf="invalido('vendedor')">{{ mensaje('vendedor') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('medioVenta')">
+          <span class="lbl">Medio de venta <b class="req">*</b></span>
+          <div class="chips" id="f-medioVenta" tabindex="-1">
+            <label class="chip" *ngFor="let m of mediosVenta">
+              <input type="radio" name="medioVenta" formControlName="medioVenta" [value]="m"><span>{{ m }}</span>
+            </label>
+          </div>
+          <small class="msg" *ngIf="invalido('medioVenta')">Elige el medio de venta</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" [attr.data-estado]="estadoSeccion('cliente')">
+      <div class="seccion-head">
+        <h2>Datos del cliente</h2>
+        <span class="estado">{{ textoSeccion('cliente') }}</span>
+      </div>
+
+      <div class="grid">
+        <div class="field span-2" [class.is-invalid]="invalido('nombre')" [class.is-valid]="valido('nombre')">
+          <label for="f-nombre">Nombre <b class="req">*</b></label>
+          <input id="f-nombre" type="text" formControlName="nombre" autocomplete="off" placeholder="Nombre completo">
+          <small class="msg" *ngIf="invalido('nombre')">{{ mensaje('nombre') }}</small>
+        </div>
+
+        <div class="field">
+          <label for="f-empresa">Empresa</label>
+          <input id="f-empresa" type="text" formControlName="empresa" autocomplete="off" placeholder="Opcional">
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('telefono')" [class.is-valid]="valido('telefono')">
+          <label for="f-telefono">Teléfono <b class="req">*</b></label>
+          <input id="f-telefono" type="tel" inputmode="numeric" maxlength="10" formControlName="telefono"
+                 placeholder="10 dígitos" (input)="soloDigitos($event, 'telefono')">
+          <small class="msg" *ngIf="invalido('telefono')">{{ mensaje('telefono') }}</small>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Entrega -->
+  <section class="seccion" [attr.data-estado]="estadoSeccion('entrega')">
+    <div class="seccion-head">
+      <h2>Entrega</h2>
+      <span class="estado">{{ textoSeccion('entrega') }}</span>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="field span-3" [class.is-invalid]="invalido('tipoEntrega')">
+        <span class="lbl">Tipo de entrega <b class="req">*</b></span>
+        <div class="chips" id="f-tipoEntrega" tabindex="-1">
+          <label class="chip" *ngFor="let t of tiposEntrega">
+            <input type="radio" name="tipoEntrega" formControlName="tipoEntrega" [value]="t.v"><span>{{ t.t }}</span>
+          </label>
+        </div>
+        <small class="msg" *ngIf="invalido('tipoEntrega')">Elige cómo se entregará</small>
+      </div>
+
+      <div class="field span-3" [class.is-invalid]="invalido('fechaEntrega')" [class.is-valid]="valido('fechaEntrega')">
+        <label for="f-fechaEntrega">Fecha de entrega <b class="req">*</b></label>
+        <div class="fecha-fila">
+          <input id="f-fechaEntrega" type="date" formControlName="fechaEntrega" [min]="hoy">
+          <button type="button" class="atajo" (click)="fijarEntrega(0)">Hoy</button>
+          <button type="button" class="atajo" (click)="fijarEntrega(1)">Mañana</button>
+        </div>
+        <small class="msg" *ngIf="invalido('fechaEntrega')">{{ mensaje('fechaEntrega') }}</small>
+      </div>
+
+      <!-- En sucursal: dónde recoge -->
+      <div class="field span-3" *ngIf="esSucursal" [class.is-invalid]="invalido('sucursalEntrega')">
+        <span class="lbl">Sucursal donde recoge <b class="req">*</b></span>
+        <div class="chips" id="f-sucursalEntrega" tabindex="-1">
+          <label class="chip" *ngFor="let s of sucursales">
+            <input type="radio" name="sucursalEntrega" formControlName="sucursalEntrega" [value]="s.nombre"><span>{{ s.nombre }}</span>
+          </label>
+        </div>
+        <ng-container *ngIf="datosSucursal('sucursalEntrega') as s">
+          <small class="sucursal-info"><span *ngIf="s.direccion">{{ s.direccion }}</span><span *ngIf="s.telefono">Tel. {{ s.telefono }}</span></small>
+        </ng-container>
+        <small class="msg" *ngIf="invalido('sucursalEntrega')">Elige la sucursal donde recogerá</small>
+      </div>
+
+      <!-- Domicilio o envío: dirección -->
+      <ng-container *ngIf="requiereDomicilio">
+        <h3 class="span-3 sub">{{ tipo === 'Envio' ? 'Dirección de envío' : 'Dirección de entrega' }}</h3>
+
+        <div class="field span-2" [class.is-invalid]="invalido('direccion')" [class.is-valid]="valido('direccion')">
+          <label for="f-direccion">Dirección <b class="req">*</b></label>
+          <input id="f-direccion" type="text" formControlName="direccion" autocomplete="off" placeholder="Calle y número">
+          <small class="msg" *ngIf="invalido('direccion')">{{ mensaje('direccion') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('colonia')" [class.is-valid]="valido('colonia')">
+          <label for="f-colonia">Colonia <b class="req">*</b></label>
+          <input id="f-colonia" type="text" formControlName="colonia" autocomplete="off">
+          <small class="msg" *ngIf="invalido('colonia')">{{ mensaje('colonia') }}</small>
+        </div>
+
+        <div class="field span-2" [class.is-invalid]="invalido('ciudad')" [class.is-valid]="valido('ciudad')">
+          <label for="f-ciudad">Ciudad o alcaldía <b class="req">*</b></label>
+          <input id="f-ciudad" type="text" formControlName="ciudad" autocomplete="off">
+          <small class="msg" *ngIf="invalido('ciudad')">{{ mensaje('ciudad') }}</small>
+        </div>
+
+        <div class="field" [class.is-invalid]="invalido('cp')" [class.is-valid]="valido('cp')">
+          <label for="f-cp">C.P. <b class="req">*</b></label>
+          <input id="f-cp" type="text" inputmode="numeric" maxlength="5" formControlName="cp" (input)="soloDigitos($event, 'cp')">
+          <small class="msg" *ngIf="invalido('cp')">{{ mensaje('cp') }}</small>
+        </div>
+
+        <div class="field span-3">
+          <label for="f-referencias">Referencias de ubicación</label>
+          <input id="f-referencias" type="text" formControlName="referencias"
+                 placeholder="Opcional: entre calles, color de fachada, piso...">
+        </div>
+      </ng-container>
+    </div>
+  </section>
+
+  <!-- Productos -->
+  <section class="seccion" [attr.data-estado]="estadoSeccion('productos')">
+    <div class="seccion-head">
+      <h2>Productos</h2>
+      <span class="estado">{{ textoSeccion('productos') }}</span>
+    </div>
+    <p class="ayuda aviso" *ngIf="registroForm.hasError('sinProductos') && intentoEnvio">Agrega al menos un producto.</p>
+    <p class="ayuda">Al escribir un producto se pone la cantidad en 1. Siempre queda una fila libre al final.</p>
+
+    <datalist id="lista-productos">
+      <option *ngFor="let p of catalogoProductos" [value]="p.nombre"></option>
+    </datalist>
+    <div class="tabla-wrap">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th class="w-cant">Cantidad</th>
+            <th>Descripción</th>
+            <th class="w-precio num">Precio unitario</th>
+            <th class="w-total num">Importe</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody formArrayName="productos">
+          <tr *ngFor="let fila of productos.controls; let i = index" [formGroupName]="i">
+            <td data-label="Cantidad">
+              <input [id]="'prod-' + i + '-cantidad'" type="number" inputmode="numeric" min="0" placeholder="0"
+                     formControlName="cantidad" [class.is-invalid]="celdaInvalida(fila, 'cantidad')">
+            </td>
+            <td data-label="Descripción">
+              <input [id]="'prod-' + i + '-descripcion'" type="text" list="lista-productos" formControlName="descripcion"
+                     autocomplete="off" placeholder="Escribe o elige..."
+                     (input)="alEscribirProducto($event, i)" [class.is-invalid]="celdaInvalida(fila, 'descripcion')">
+            </td>
+            <td data-label="Precio unitario">
+              <input [id]="'prod-' + i + '-precio'" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"
+                     formControlName="precio" [class.is-invalid]="celdaInvalida(fila, 'precio')">
+            </td>
+            <td data-label="Importe" class="num total-celda">{{ importe(fila) | currency:'MXN':'symbol-narrow' }}</td>
+            <td class="acc">
+              <button type="button" class="btn-quitar" (click)="removeFilaProducto(i)"
+                      [disabled]="productos.length === 1" title="Quitar fila" aria-label="Quitar fila">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pie-tabla">
+      <button type="button" class="btn-agregar" (click)="addFilaProducto()">+ Agregar fila</button>
+      <div class="linea-iva">
+        <span class="lbl-sub">Subtotal</span>
+        <output class="monto monto-fuerte">{{ totales.subtotal | currency:'MXN':'symbol-narrow' }}</output>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pago -->
+  <section class="seccion" [attr.data-estado]="estadoSeccion('pago')">
+    <div class="seccion-head">
+      <h2>Pago y totales</h2>
+      <span class="estado">{{ textoSeccion('pago') }}</span>
+    </div>
+
+    <div class="cierre">
+      <div class="cierre-izq">
+        <div class="field" [class.is-invalid]="invalido('formaPago')">
+          <span class="lbl">Forma de pago <b class="req">*</b></span>
+          <div class="chips" id="f-formaPago" tabindex="-1">
+            <label class="chip" *ngFor="let p of formasPago">
+              <input type="radio" name="formaPago" formControlName="formaPago" [value]="p"><span>{{ p }}</span>
+            </label>
+          </div>
+          <small class="msg" *ngIf="invalido('formaPago')">Elige cómo pagará el cliente</small>
+        </div>
+
+        <div class="field field-disp" [class.is-invalid]="invalido('disponibilidad')" [class.is-valid]="valido('disponibilidad')">
+          <label for="f-disponibilidad">Estatus de pago <b class="req">*</b></label>
+          <select id="f-disponibilidad" formControlName="disponibilidad">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let d of disponibilidadOpc" [value]="d">{{ d }}</option>
+          </select>
+          <small class="ayuda">Se propone solo según el anticipo; puedes cambiarlo.</small>
+          <small class="msg" *ngIf="invalido('disponibilidad')">{{ mensaje('disponibilidad') }}</small>
+        </div>
+
+        <div class="field">
+          <label for="f-observaciones">Observaciones</label>
+          <textarea id="f-observaciones" rows="3" formControlName="observaciones"
+                    placeholder="Opcional: indicaciones para quien entrega"></textarea>
+        </div>
+      </div>
+
+      <div class="cierre-der">
+        <dl class="resumen">
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{{ totales.subtotal | currency:'MXN':'symbol-narrow' }}</dd>
+          </div>
+
+          <div>
+            <dt><label for="f-descuento">Descuento</label></dt>
+            <dd>
+              <input id="f-descuento" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"
+                     formControlName="descuento" [class.is-invalid]="invalido('descuento')">
+            </dd>
+          </div>
+
+          <div *ngIf="requiereDomicilio">
+            <dt><label for="f-envio">Costo de envío</label></dt>
+            <dd>
+              <input id="f-envio" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"
+                     formControlName="envio" [class.is-invalid]="invalido('envio')">
+            </dd>
+          </div>
+
+          <div>
+            <dt>IVA ({{ tasaIva }} %)</dt>
+            <dd>{{ totales.iva | currency:'MXN':'symbol-narrow' }}</dd>
+          </div>
+
+          <div class="resumen-total">
+            <dt>Total a pagar</dt>
+            <dd>{{ totales.total | currency:'MXN':'symbol-narrow' }}</dd>
+          </div>
+
+          <div>
+            <dt><label for="f-anticipo">Anticipo / pagado</label></dt>
+            <dd class="dd-multi">
+              <button type="button" class="btn-cobrar" (click)="cobrarTodo()" [disabled]="!totales.total">Pagó todo</button>
+              <input id="f-anticipo" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"
+                     formControlName="anticipo" [class.is-invalid]="invalido('anticipo') || registroForm.hasError('anticipoMayor')">
+            </dd>
+          </div>
+
+          <div class="resumen-saldo">
+            <dt>Saldo por cobrar</dt>
+            <dd>{{ totales.saldo | currency:'MXN':'symbol-narrow' }}</dd>
+          </div>
+        </dl>
+        <small class="msg" *ngIf="registroForm.hasError('anticipoMayor')">El anticipo no puede ser mayor al total.</small>
+        <small class="msg" *ngIf="invalido('descuento') || invalido('envio') || invalido('anticipo')">Los montos no pueden ser negativos.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra fija -->
+  <div class="barra">
+    <div class="avance">
+      <div class="avance-texto">
+        <ng-container *ngIf="faltantes.length; else listo">
+          Faltan {{ faltantes.length }} dato{{ faltantes.length > 1 ? 's' : '' }}
+          <button type="button" class="link" (click)="irAlSiguiente()">Ir al siguiente</button>
+        </ng-container>
+        <ng-template #listo>Todo listo para guardar</ng-template>
+      </div>
+      <div class="avance-pista" role="progressbar" [attr.aria-valuenow]="progreso" aria-valuemin="0" aria-valuemax="100">
+        <div class="avance-relleno" [style.width.%]="progreso" [class.completo]="!faltantes.length"></div>
+      </div>
+    </div>
+    <div class="barra-total"><span>Total a pagar</span>{{ totales.total | currency:'MXN':'symbol-narrow' }}</div>
+    <div class="barra-total barra-saldo"><span>Saldo</span>{{ totales.saldo | currency:'MXN':'symbol-narrow' }}</div>
+    <div class="acciones">
+      <button type="submit" class="btn btn-guardar">Guardar</button>
+      <button type="button" class="btn btn-orden" (click)="imprimir()">Imprimir</button>
+      <button type="button" class="btn btn-salir" (click)="goToMain()">Salir</button>
+    </div>
+  </div>
+</form>
+
+<app-footer></app-footer>
