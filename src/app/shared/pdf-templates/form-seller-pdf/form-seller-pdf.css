@@ -1,0 +1,69 @@
+:host { display: contents; }
+
+/* ---------- Visor (pantalla) ---------- */
+.visor { position: fixed; inset: 0; z-index: 1000; background: rgba(15, 23, 42, .65);
+  display: flex; align-items: stretch; justify-content: center; padding: 16px; }
+.visor-caja { display: flex; flex-direction: column; width: min(100%, 960px); background: #e5e7eb;
+  border-radius: 10px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+.visor-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; background: #fff; border-bottom: 1px solid #d1d5db; }
+.visor-titulo { display: flex; flex-direction: column; min-width: 0; }
+.visor-titulo strong { font-size: 15px; }
+.archivo { font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visor-acc { display: flex; gap: 8px; }
+.b { padding: 8px 14px; border: 1px solid #9ca3af; background: #fff; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer; }
+.b:hover { background: #f3f4f6; }
+.b-desc { background: #1d4ed8; border-color: #1d4ed8; color: #fff; font-weight: 600; }
+.b-desc:hover { background: #1e40af; }
+.b:disabled { opacity: .6; cursor: wait; }
+.visor-scroll { flex: 1; overflow: auto; padding: 20px; }
+
+/* Hoja carta: el "papel" tiene los márgenes; solo .hoja se convierte en PDF */
+.papel { width: 8.5in; min-height: 11in; margin: 0 auto; padding: .45in; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); box-sizing: border-box; }
+.hoja { width: 7.6in; color: #111827; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11.5px; line-height: 1.4; background: #fff; }
+
+/* ---------- Contenido del documento ---------- */
+.doc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+  padding-bottom: 10px; margin-bottom: 14px; border-bottom: 3px solid #1d4ed8; }
+.doc-head h1 { margin: 0; font-size: 22px; color: #1e3a8a; }
+.sub { margin: 2px 0 0; color: #6b7280; font-size: 11px; }
+.doc-meta { display: flex; gap: 18px; margin: 0; }
+.doc-meta div { text-align: right; }
+.doc-meta dt { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; }
+.doc-meta dd { margin: 0; font-weight: 700; font-size: 14px; }
+
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dos-fin { align-items: start; }
+.bloque { margin-bottom: 12px; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 6px; break-inside: avoid; page-break-inside: avoid; }
+.bloque h2 { margin: 0 0 6px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: #1d4ed8; }
+.chip { margin-left: 6px; padding: 1px 7px; border-radius: 99px; background: #dbeafe; color: #1e3a8a; font-size: 9.5px; text-transform: none; letter-spacing: 0; }
+
+.campo { display: flex; flex-direction: column; margin-bottom: 5px; }
+.campo span { font-size: 9.5px; color: #6b7280; }
+.campo b { font-weight: 600; overflow-wrap: anywhere; }
+
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th { padding: 5px 6px; background: #eff6ff; color: #1e3a8a; font-size: 10px; text-align: left; border-bottom: 1px solid #bfdbfe; }
+.tabla td { padding: 5px 6px; border-bottom: 1px solid #e5e7eb; }
+.tabla tr { break-inside: avoid; page-break-inside: avoid; }
+.tabla .n { text-align: right; white-space: nowrap; }
+.tabla .c { text-align: center; width: 48px; }
+.vacio { text-align: center; color: #9ca3af; font-style: italic; }
+
+.tot { margin: 0; }
+.tot div { display: flex; justify-content: space-between; padding: 3px 0; }
+.tot dt { color: #4b5563; }
+.tot dd { margin: 0; font-weight: 600; }
+.tot-fuerte { margin-top: 3px; padding-top: 6px !important; border-top: 1px solid #9ca3af; font-size: 13px; }
+.tot-fuerte dt { color: #111827; font-weight: 700; }
+.tot-nota { font-size: 10px; color: #6b7280; }
+.tot-saldo { margin-top: 3px; padding: 6px 8px !important; background: #fef3c7; border-radius: 4px; }
+.tot-saldo dt, .tot-saldo dd { font-weight: 700; color: #92400e; }
+
+.firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 44px 24px 4px; border: none; }
+.firmas div { border-top: 1px solid #111827; text-align: center; padding-top: 4px; }
+.firmas span { font-size: 10px; color: #4b5563; }
+
+@media (max-width: 700px) { .visor { padding: 0; } .visor-caja { border-radius: 0; } .visor-scroll { padding: 8px; } }
+
+.tip { font-size: 11px; color: #1d4ed8; }

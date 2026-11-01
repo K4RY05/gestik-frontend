@@ -1,1 +1,122 @@
-<p>form-seller-pdf works!</p>
+<div class="visor" (click)="cerrar.emit()" role="dialog" aria-modal="true" [attr.aria-label]="titulo">
+  <div class="visor-caja" (click)="$event.stopPropagation()">
+
+    <div class="visor-barra">
+      <div class="visor-titulo">
+        <strong>{{ titulo }}</strong>
+        <span class="archivo">{{ nombreArchivo }}</span>
+        <span class="tip">En el diálogo elige «Guardar como PDF»</span>
+      </div>
+      <div class="visor-acc">
+        <button type="button" class="b b-desc" (click)="descargar()" [disabled]="generando">
+          {{ generando ? 'Generando...' : 'Descargar PDF' }}
+        </button>
+        <button type="button" class="b" (click)="cerrar.emit()">Cerrar</button>
+      </div>
+    </div>
+
+    <div class="visor-scroll">
+      <div class="papel">
+        <div class="hoja" #hoja *ngIf="datos">
+
+          <header class="doc-head">
+            <div><h1>Orden de servicio</h1><p class="sub">Instalación y servicios</p></div>
+            <dl class="doc-meta">
+              <div><dt>Folio</dt><dd>{{ folioTxt }}</dd></div>
+              <div><dt>Fecha</dt><dd>{{ datos.fecha | date:'dd/MM/yyyy' }}</dd></div>
+            </dl>
+          </header>
+
+          <div class="dos">
+            <section class="bloque">
+              <h2>Orden</h2>
+              <div class="campo"><span>Medio de contacto</span><b>{{ datos.medioContacto || '—' }}</b></div>
+              <div class="campo"><span>Responsable</span><b>{{ nombreEmpleado(datos.empleadoResponsable) }}</b></div>
+              <div class="campo"><span>Instalación</span><b>{{ datos.fechaInstalacion | date:'dd/MM/yyyy' }} · {{ hora12(datos.horaInstalacion) }}</b></div>
+              <div class="campo"><span>Estatus de pago</span><b>{{ datos.estatus || '—' }}</b></div>
+            </section>
+            <section class="bloque">
+              <h2>Cliente</h2>
+              <div class="campo"><span>Nombre</span><b>{{ datos.nombre || '—' }}</b></div>
+              <div class="campo"><span>Empresa</span><b>{{ datos.empresa || '—' }}</b></div>
+              <div class="campo"><span>Teléfono</span><b>{{ datos.telefono || '—' }}</b></div>
+              <div class="campo"><span>Dirección</span>
+                <b>{{ datos.direccion }}, Col. {{ datos.colonia }}, {{ datos.ciudad }}, C.P. {{ datos.cp }}</b></div>
+              <div class="campo" *ngIf="datos.referencias"><span>Referencias</span><b>{{ datos.referencias }}</b></div>
+            </section>
+          </div>
+
+          <section class="bloque" *ngIf="serviciosFilas.length">
+            <h2>Servicios por tamaño de pantalla</h2>
+            <table class="tabla">
+              <thead><tr><th>Tamaño</th><th class="n">Muro firme</th><th class="n">Plafón falso</th><th class="n">Techo</th><th class="n">Desmontaje</th><th class="n">Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of serviciosFilas">
+                  <td>{{ tamanoTxt(r.tamanoPantallas) }}</td>
+                  <td class="n">{{ r.muroFirme | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.plafonFalso | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.techo | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.desmontaje | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.total | currency:'MXN':'symbol-narrow' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="bloque" *ngIf="materialesFilas.length">
+            <h2>Material de instalación y otros servicios</h2>
+            <table class="tabla">
+              <thead><tr><th class="c">Cant.</th><th>Descripción</th><th class="n">Precio unit.</th><th class="n">Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of materialesFilas">
+                  <td class="c">{{ r.cantidad }}</td><td>{{ r.descripcion }}</td>
+                  <td class="n">{{ r.precioUnitario | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.total | currency:'MXN':'symbol-narrow' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="bloque" *ngIf="soportesFilas.length">
+            <h2>Soportes / pedestales <span class="chip" *ngIf="datos.disponibilidad">{{ datos.disponibilidad }}</span></h2>
+            <table class="tabla">
+              <thead><tr><th class="c">Cant.</th><th>Soporte</th><th class="n">Precio unit.</th><th class="n">Total</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of soportesFilas">
+                  <td class="c">{{ r.cantidad }}</td><td>{{ r.descripcion }}</td>
+                  <td class="n">{{ r.precioUnitario | currency:'MXN':'symbol-narrow' }}</td>
+                  <td class="n">{{ r.total | currency:'MXN':'symbol-narrow' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <div class="dos dos-fin">
+            <section class="bloque">
+              <h2>Cierre</h2>
+              <div class="campo"><span>Forma de pago</span><b>{{ datos.formaPago || '—' }}</b></div>
+              <div class="campo"><span>Instalador(es)</span><b>{{ instaladoresTxt.join(', ') || '—' }}</b></div>
+              <div class="campo" *ngIf="datos.observaciones"><span>Observaciones</span><b>{{ datos.observaciones }}</b></div>
+            </section>
+            <section class="bloque">
+              <h2>Totales</h2>
+              <dl class="tot">
+                <div><dt>Subtotal</dt><dd>{{ datos.totales.subtotal | currency:'MXN':'symbol-narrow' }}</dd></div>
+                <div><dt>I.V.A.</dt><dd>{{ datos.totales.iva | currency:'MXN':'symbol-narrow' }}</dd></div>
+                <div class="tot-fuerte"><dt>Total a pagar</dt><dd>{{ datos.totales.total | currency:'MXN':'symbol-narrow' }}</dd></div>
+                <div><dt>Anticipo / pagado</dt><dd>{{ datos.totales.anticipo | currency:'MXN':'symbol-narrow' }}</dd></div>
+                <div class="tot-saldo"><dt>Saldo por cobrar</dt><dd>{{ datos.totales.saldo | currency:'MXN':'symbol-narrow' }}</dd></div>
+              </dl>
+            </section>
+          </div>
+
+          <div class="firmas bloque">
+            <div><span>Instalador</span></div>
+            <div><span>Cliente (conforme con el servicio)</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
