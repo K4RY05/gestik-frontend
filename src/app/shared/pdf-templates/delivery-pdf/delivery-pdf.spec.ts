@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PdfViewer } from './pdf-viewer';
+import { DeliveryPdf } from './delivery-pdf';
 
-describe('PdfViewer', () => {
-  let component: PdfViewer;
-  let fixture: ComponentFixture<PdfViewer>;
+describe('DeliveryPdf', () => {
+  let component: DeliveryPdf;
+  let fixture: ComponentFixture<DeliveryPdf>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PdfViewer],
+      imports: [DeliveryPdf],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(PdfViewer);
+    fixture = TestBed.createComponent(DeliveryPdf);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

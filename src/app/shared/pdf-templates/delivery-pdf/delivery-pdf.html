@@ -1,0 +1,158 @@
+<div class="overlay" *ngIf="datos" (click)="cerrar.emit()">
+  <div class="panel" (click)="$event.stopPropagation()">
+
+    <div class="toolbar">
+      <span class="toolbar-nombre">
+        {{ soloVista ? 'Formato de entrega' : 'Vista previa' }}: <b>{{ nombreArchivo }}</b>
+      </span>
+      <div class="toolbar-acc">
+        <button *ngIf="!soloVista" type="button" class="btn btn-pdf"
+                [disabled]="descargando" (click)="descargar()">
+          {{ descargando ? 'Generando…' : 'Descargar PDF' }}
+        </button>
+        <button type="button" class="btn btn-cerrar" (click)="cerrar.emit()">Cerrar</button>
+      </div>
+    </div>
+
+    <article class="hoja" #hoja>
+
+      <!-- Banda superior -->
+      <div class="banda" aria-hidden="true"><span></span></div>
+
+      <!-- Encabezado -->
+      <header class="h-head">
+        <div class="h-titulo">
+          <span class="h-empresa">Soportes y Pedestales MakayMajo</span>
+          <h1 class="titulo">FORMATO DE ENTREGA</h1>
+        </div>
+        <div class="h-meta">
+          <div class="meta-fila"><span class="meta-lbl">FOLIO</span><span class="meta-val folio">{{ datos.folio }}</span></div>
+          <div class="meta-fila"><span class="meta-lbl">FECHA</span><span class="meta-val">{{ datos.fecha | date:'dd/MM/yyyy' }}</span></div>
+        </div>
+      </header>
+
+      <!-- Venta y cliente -->
+      <div class="barra">DATOS DE LA VENTA Y DEL CLIENTE</div>
+      <section class="cliente">
+        <div class="col">
+          <div class="fila"><span class="lbl">SUCURSAL DE SALIDA</span><span class="val">{{ sucSalida?.nombre }}</span></div>
+          <div class="fila" *ngIf="sucSalida?.direccion"><span class="lbl">DIRECCIÓN SUCURSAL</span><span class="val">{{ sucSalida?.direccion }}</span></div>
+          <div class="fila" *ngIf="sucSalida?.telefono"><span class="lbl">TEL. SUCURSAL</span><span class="val">{{ sucSalida?.telefono }}</span></div>
+          <div class="fila"><span class="lbl">VENDEDOR</span><span class="val">{{ vendedorTxt }}</span></div>
+          <div class="fila"><span class="lbl">MEDIO DE VENTA</span><span class="val">{{ datos.medioVenta }}</span></div>
+        </div>
+
+        <div class="col">
+          <div class="fila"><span class="lbl">NOMBRE</span><span class="val">{{ datos.nombre }}</span></div>
+          <div class="fila" *ngIf="datos.empresa"><span class="lbl">EMPRESA</span><span class="val">{{ datos.empresa }}</span></div>
+          <div class="fila"><span class="lbl">TELÉFONO</span><span class="val">{{ datos.telefono }}</span></div>
+        </div>
+      </section>
+
+      <!-- Entrega -->
+      <div class="barra">DATOS DE LA ENTREGA</div>
+      <section class="cliente">
+        <div class="col">
+          <div class="fila"><span class="lbl">TIPO DE ENTREGA</span><span class="val val-fuerte">{{ tipoTxt }}</span></div>
+          <div class="fila"><span class="lbl">FECHA DE ENTREGA</span><span class="val val-fuerte">{{ datos.fechaEntrega | date:'dd/MM/yyyy' }}</span></div>
+
+          <ng-container *ngIf="esSucursal">
+            <div class="fila"><span class="lbl">SUCURSAL DE RECOLECCIÓN</span><span class="val">{{ sucEntrega?.nombre }}</span></div>
+            <div class="fila" *ngIf="sucEntrega?.direccion"><span class="lbl">DIRECCIÓN</span><span class="val">{{ sucEntrega?.direccion }}</span></div>
+            <div class="fila" *ngIf="sucEntrega?.telefono"><span class="lbl">TELÉFONO</span><span class="val">{{ sucEntrega?.telefono }}</span></div>
+          </ng-container>
+        </div>
+
+        <div class="col" *ngIf="requiereDomicilio">
+          <span class="lbl-azul sub-dir">{{ tituloDireccion }}</span>
+          <div class="fila"><span class="lbl">DIRECCIÓN</span><span class="val">{{ datos.direccion }}</span></div>
+          <div class="fila"><span class="lbl">COLONIA</span><span class="val">{{ datos.colonia }}</span></div>
+          <div class="fila-doble">
+            <div class="fila"><span class="lbl">CIUDAD O ALCALDÍA</span><span class="val">{{ datos.ciudad }}</span></div>
+            <div class="fila fila-cp"><span class="lbl">C.P.</span><span class="val">{{ datos.cp }}</span></div>
+          </div>
+          <div class="bloque" *ngIf="datos.referencias">
+            <span class="lbl-azul">REFERENCIAS DE UBICACIÓN</span>
+            <div class="val val-multi">{{ datos.referencias }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Productos -->
+      <ng-container *ngIf="productos.length">
+        <div class="barra">PRODUCTOS A ENTREGAR</div>
+        <table>
+          <thead>
+            <tr>
+              <th class="w-cant">CANTIDAD</th><th class="izq">DESCRIPCIÓN</th>
+              <th class="w-precio">P. UNITARIO</th><th class="w-total">IMPORTE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of productos">
+              <td>{{ f.cantidad }}</td>
+              <td class="izq">{{ f.descripcion }}</td>
+              <td>{{ mx(f.precio) }}</td>
+              <td><b>{{ mx(importe(f)) }}</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
+
+      <!-- Cierre: pago, firmas y contacto (siempre al fondo de la hoja) -->
+      <div class="cierre">
+
+      <!-- Pago -->
+      <section class="pago">
+        <div class="pago-izq">
+          <div class="fila-pago"><span class="chip-naranja">FORMA DE PAGO</span><span class="caja-monto caja-texto">{{ datos.formaPago }}</span></div>
+          <div class="fila-pago"><span class="chip-azul">ESTATUS DE PAGO</span><span class="caja-monto caja-texto">{{ datos.disponibilidad }}</span></div>
+
+          <div class="obs" *ngIf="datos.observaciones">
+            <span class="lbl-azul">OBSERVACIONES</span>
+            <div class="val val-multi">{{ datos.observaciones }}</div>
+          </div>
+        </div>
+        <dl class="totales">
+          <div><dt>Subtotal</dt><dd>{{ mx(datos.totales.subtotal) }}</dd></div>
+          <div *ngIf="datos.descuento > 0"><dt>Descuento</dt><dd>- {{ mx(datos.descuento) }}</dd></div>
+          <div *ngIf="requiereDomicilio && datos.envio > 0"><dt>Costo de envío</dt><dd>{{ mx(datos.envio) }}</dd></div>
+          <div><dt>I.V.A. incluido ({{ tasaIva }}%)</dt><dd>{{ mx(datos.totales.iva) }}</dd></div>
+          <div class="total"><dt>TOTAL A PAGAR</dt><dd>{{ mx(datos.totales.total) }}</dd></div>
+          <div><dt>Anticipo / pagado</dt><dd>{{ mx(datos.anticipo) }}</dd></div>
+          <div class="saldo"><dt>SALDO POR COBRAR</dt><dd>{{ mx(datos.totales.saldo) }}</dd></div>
+        </dl>
+      </section>
+
+      <!-- Firmas -->
+      <section class="firmas">
+        <div class="firma"><span class="firma-linea"></span><span class="firma-txt">Entregó (nombre y firma)</span></div>
+        <div class="firma"><span class="firma-linea"></span><span class="firma-txt">Recibí de conformidad (nombre y firma)</span></div>
+      </section>
+
+      <!-- Contacto -->
+      <footer class="contacto">
+        <a class="c-item" [href]="contacto.telHref">
+          <span class="c-ico">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+          </span>
+          <span><b>Teléfono</b><br>{{ contacto.telefono }}</span>
+        </a>
+        <a class="c-item" [href]="contacto.mailHref">
+          <span class="c-ico">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </span>
+          <span><b>Email</b><br>{{ contacto.email }}</span>
+        </a>
+        <a class="c-item" [href]="contacto.webHref" target="_blank" rel="noopener">
+          <span class="c-ico">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.95a15.6 15.6 0 00-1.38-3.56A8.03 8.03 0 0118.9 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14a8.2 8.2 0 010-4h3.38a16.5 16.5 0 000 4H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.99 7.99 0 015.08 16zm2.95-8H5.08a7.99 7.99 0 014.33-3.56A15.6 15.6 0 008.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66a14.7 14.7 0 010-4h4.68a14.7 14.7 0 010 4zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 01-4.33 3.56zM16.36 14a16.5 16.5 0 000-4h3.38a8.2 8.2 0 010 4h-3.38z"/></svg>
+          </span>
+          <span><b>Sitio Web</b><br>{{ contacto.web }}</span>
+        </a>
+      </footer>
+
+      </div>
+    </article>
+  </div>
+</div>

@@ -1,0 +1,236 @@
+/* Variables */
+:host,
+.hoja {
+  --azul: #0b3b7a;
+  --azul-2: #1f5fbf;
+  --naranja: #f26b21;
+  --texto: #1f2937;
+  --gris: #6b7280;
+  --linea: #e5e7eb;
+  --fondo-suave: #f4f7fc;
+}
+
+/* ---------- Contenedor / vista previa ---------- */
+.overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(15, 23, 42, .65);
+  display: flex; justify-content: center;
+  overflow: auto; padding: 24px 12px;
+}
+.panel { width: fit-content; min-width: 794px; max-width: none; margin: 0 auto; }
+
+.toolbar {
+  position: sticky; top: 0; z-index: 2; box-sizing: border-box;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: #fff; padding: 10px 16px; border-radius: 10px;
+  margin-bottom: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+.toolbar-nombre { font-size: 14px; color: var(--texto); }
+.toolbar-acc { display: flex; gap: 8px; }
+
+.btn {
+  border: 0; border-radius: 8px; padding: 9px 18px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn:disabled { opacity: .6; cursor: wait; }
+.btn-pdf { background: var(--naranja); color: #fff; }
+.btn-cerrar { background: #e5e7eb; color: var(--texto); }
+
+/* ---------- Hoja (una sola página A4, alto fijo) ---------- */
+.hoja {
+  position: relative; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  width: 794px;                    /* A4 a 96 dpi */
+  height: 1123px;                  /* alto fijo: una sola hoja */
+  flex-shrink: 0; margin: 0 auto;
+  background: #fff; color: var(--texto);
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 10.5px; line-height: 1.35;
+  padding: 0 30px;
+  border-radius: 4px; overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+.hoja.exportando {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* Zona entre la banda y el pie */
+.cuerpo {
+  flex: 1 1 0; min-height: 0;
+  overflow: hidden; position: relative;
+}
+.contenido {
+  display: flex; flex-direction: column;
+  transform-origin: top left;
+}
+/* Pago + políticas pegados abajo: el espacio libre queda debajo de los productos */
+.inferior { margin-top: auto; padding-top: 12px; }
+
+/* ---------- Banda superior ---------- */
+.banda {
+  flex: 0 0 auto;
+  height: 12px; margin: 0 -30px 14px;
+  background: linear-gradient(100deg,
+    var(--azul) 0%, var(--azul-2) 70%,
+    var(--naranja) 70.2%, var(--naranja) 100%);
+}
+.banda span { display: none; }
+
+/* ---------- Encabezado ---------- */
+.h-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 16px; margin-bottom: 10px;
+}
+.h-empresa {
+  display: block; font-size: 10px; font-weight: 700;
+  letter-spacing: 1.6px; text-transform: uppercase; color: var(--naranja);
+}
+.titulo {
+  margin: 2px 0 0; font-size: 24px; font-weight: 800;
+  letter-spacing: .5px; color: var(--azul); line-height: 1.1;
+}
+.h-meta {
+  min-width: 190px; border: 1px solid var(--linea); border-radius: 8px;
+  overflow: hidden; background: var(--fondo-suave);
+}
+.meta-fila {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 12px; gap: 14px;
+}
+.meta-fila + .meta-fila { border-top: 1px solid var(--linea); }
+.meta-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: var(--gris); }
+.meta-val { font-weight: 700; color: var(--texto); }
+.meta-val.folio { color: var(--naranja); font-size: 13px; }
+
+/* ---------- Barras de sección ---------- */
+.barra {
+  margin: 10px 0 6px; padding: 5px 10px;
+  background: var(--azul); color: #fff;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+  border-left: 5px solid var(--naranja); border-radius: 3px;
+}
+
+/* ---------- Datos del cliente ---------- */
+.cliente {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px;
+  padding: 8px 12px; background: var(--fondo-suave);
+  border: 1px solid var(--linea); border-radius: 8px;
+}
+.col { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.fila { display: flex; flex-direction: column; min-width: 0; }
+.fila-doble { display: grid; grid-template-columns: 1fr 70px; gap: 10px; }
+.lbl, .lbl-azul {
+  font-size: 8.5px; font-weight: 700; letter-spacing: .9px; color: var(--gris);
+}
+.lbl-azul { color: var(--azul); }
+.val {
+  font-size: 11px; font-weight: 600; color: var(--texto);
+  padding-bottom: 2px; border-bottom: 1px dashed #cbd5e1;
+  word-break: break-word; min-height: 14px;
+}
+.val-multi {
+  min-height: 28px; white-space: pre-line; font-weight: 500;
+  background: #fff; border: 1px solid var(--linea); border-radius: 5px; padding: 3px 6px;
+}
+
+/* ---------- Tablas ---------- */
+table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  border: 1px solid var(--linea); border-radius: 6px; overflow: hidden;
+  font-size: 10px;
+}
+table th {
+  background: #e8eef8; color: var(--azul); font-size: 9px; font-weight: 700;
+  letter-spacing: .7px; padding: 5px 6px; text-align: center;
+  border-bottom: 2px solid var(--azul);
+}
+table td {
+  padding: 4px 6px; text-align: center; border-bottom: 1px solid var(--linea);
+}
+table tbody tr:nth-child(even) td { background: #fafbfd; }
+table tbody tr:last-child td { border-bottom: 0; }
+table th.izq, table td.izq { text-align: left; }
+
+.w-cant { width: 80px; }
+.w-precio { width: 110px; }
+.w-total { width: 110px; }
+
+/* ---------- Subtotales por sección ---------- */
+.pie-sec, .disp {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 6px; margin-top: 5px; flex-wrap: wrap;
+}
+.disp { justify-content: flex-start; margin: 0 0 6px; }
+
+.chip-azul, .chip-naranja {
+  display: inline-block; padding: 4px 10px; border-radius: 4px;
+  color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+}
+.chip-azul { background: var(--azul); }
+.chip-naranja { background: var(--naranja); }
+
+.caja-monto {
+  display: inline-block; min-width: 86px; padding: 3px 10px;
+  border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;
+  font-weight: 700; text-align: right; margin-right: 8px;
+}
+.caja-monto.caja-texto { text-align: left; font-weight: 600; min-width: 130px; }
+
+/* ---------- Pago ---------- */
+.pago {
+  display: grid; grid-template-columns: 1fr 270px; gap: 14px;
+  margin-top: 0; align-items: start;
+}
+.pago-izq { display: flex; flex-direction: column; gap: 8px; }
+.fila-pago { display: flex; align-items: center; gap: 8px; }
+.fila-pago .caja-monto { flex: 1; margin-right: 0; }
+
+.totales {
+  margin: 0; border: 1px solid var(--linea); border-radius: 8px; overflow: hidden;
+}
+.totales div {
+  display: flex; justify-content: space-between; padding: 4px 10px;
+  border-bottom: 1px solid var(--linea); background: #fff;
+}
+.totales dt { color: var(--gris); font-weight: 600; }
+.totales dd { margin: 0; font-weight: 700; }
+.totales .total { background: var(--azul); }
+.totales .total dt, .totales .total dd { color: #fff; font-size: 13px; }
+.totales .saldo { background: var(--naranja); border-bottom: 0; }
+.totales .saldo dt, .totales .saldo dd { color: #fff; font-size: 13px; }
+
+/* ---------- Políticas ---------- */
+.politicas {
+  margin-top: 12px; margin-bottom: 12px; padding: 8px 12px; font-size: 9px; line-height: 1.35;
+  background: var(--fondo-suave); border: 1px solid var(--linea);
+  border-left: 5px solid var(--naranja); border-radius: 6px;
+}
+.politicas p { margin: 0 0 2px; }
+.politicas .pol-titulo { font-size: 10.5px; font-weight: 800; letter-spacing: 1px; color: var(--azul); margin-bottom: 4px; }
+.politicas .pol-dest { font-weight: 700; }
+.politicas .pol-sub { margin-top: 4px; font-weight: 700; color: var(--azul); }
+.politicas ul { list-style: none; margin: 2px 0 4px; padding: 0 0 0 4px; }
+.politicas li { margin-bottom: 1px; }
+.politicas .pol-poliza { margin-top: 4px; }
+.politicas .enlace { color: var(--azul-2); font-weight: 600; text-decoration: underline; word-break: break-all; }
+
+/* ---------- Contacto (siempre al fondo) ---------- */
+.contacto {
+  flex: 0 0 auto;
+  display: flex; justify-content: space-between; gap: 10px;
+  margin: 0 -30px; padding: 10px 30px;
+  background: linear-gradient(90deg, var(--azul), var(--azul-2)); color: #fff;
+}
+.c-item {
+  display: flex; align-items: center; gap: 9px;
+  color: #fff; text-decoration: none; font-size: 10.5px; line-height: 1.35;
+}
+.c-item b { font-size: 9.5px; letter-spacing: .8px; text-transform: uppercase; color: #fbbf24; }
+.c-ico {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--naranja);
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.c-ico svg { width: 15px; height: 15px; fill: #fff; }
