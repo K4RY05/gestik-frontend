@@ -15,11 +15,18 @@ export class FormSellerPdf implements OnChanges {
   /** Resultado de registroForm.getRawValue() + totales */
   @Input() datos: any = null;
   @Input() empleados: { id: number; nombre: string }[] = [];
-  /** Si es true, descarga el PDF apenas se abre la vista previa */
-  @Input() autoDescargar = true;
+
+  /** Seller: true → descarga el PDF apenas se abre la vista previa */
+  @Input() autoDescargar = false;
+
+  /** Installer: true → solo visualizador, sin botón de descarga ni descarga automática */
+  @Input() soloVista = false;
+
   @Output() cerrar = new EventEmitter<void>();
 
   @ViewChild('hoja') hoja!: ElementRef<HTMLElement>;
+  @ViewChild('cuerpo') cuerpo!: ElementRef<HTMLElement>;
+  @ViewChild('contenido') contenido!: ElementRef<HTMLElement>;
 
   descargando = false;
 
@@ -42,11 +49,43 @@ export class FormSellerPdf implements OnChanges {
 
   private readonly pesos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-  // ---------- Descarga automática al abrir ----------
+  // ---------- Ajuste a una hoja y descarga automática ----------
   ngOnChanges(c: SimpleChanges): void {
-    if (c['datos'] && this.datos && this.autoDescargar) {
-      // espera a que Angular pinte la hoja
-      setTimeout(() => this.descargar(), 400);
+    if (c['datos'] && this.datos) {
+      // espera a que Angular pinte la hoja y ajusta para que quepa en una página
+      setTimeout(() => this.ajustar(), 0);
+
+      if (this.autoDescargar && !this.soloVista) {
+        setTimeout(() => this.descargar(), 400);
+      }
+    }
+  }
+
+  /** Si el contenido excede la hoja A4, lo reduce proporcionalmente para que quepa */
+  private ajustar(): void {
+    const cuerpo = this.cuerpo?.nativeElement;
+    const cont = this.contenido?.nativeElement;
+    if (!cuerpo || !cont) return;
+
+    // reset
+    cont.style.transform = '';
+    cont.style.width = '';
+    cont.style.height = '';
+
+    const disp = cuerpo.clientHeight;
+    if (cont.scrollHeight <= disp) {
+      cont.style.height = `${disp}px`;   // llena el espacio → pago/políticas quedan abajo
+      return;
+    }
+
+    let s = disp / cont.scrollHeight;
+    for (let i = 0; i < 4; i++) {
+      cont.style.transform = `scale(${s})`;
+      cont.style.width = `${100 / s}%`;
+      cont.style.height = `${disp / s}px`;
+      const real = cont.scrollHeight;                // alto sin escalar tras reflujo
+      if (real <= disp / s + 1) break;
+      s = disp / real;
     }
   }
 
@@ -129,13 +168,17 @@ export class FormSellerPdf implements OnChanges {
 
   // ---------- Descargar PDF (siempre una sola hoja A4) ----------
   async descargar(): Promise<void> {
-    if (this.descargando || !this.hoja) return;
+    if (this.soloVista || this.descargando || !this.hoja) return;
     this.descargando = true;
 
     const el = this.hoja.nativeElement;
     el.classList.add('exportando');
+    this.ajustar();
 
     try {
+      // deja que el navegador aplique estilos/reflujo antes de capturar
+      await new Promise<void>(r => requestAnimationFrame(() => r()));
+
       const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
@@ -147,19 +190,13 @@ export class FormSellerPdf implements OnChanges {
         backgroundColor: '#ffffff',
         scrollX: 0,
         scrollY: 0,
+        width: 794,
+        height: 1123,
+        windowWidth: 794,
       });
 
       const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-      const pageW = pdf.internal.pageSize.getWidth();   // 210
-      const pageH = pdf.internal.pageSize.getHeight();  // 297
-
-      // Ajuste proporcional para que todo quepa en una sola hoja
-      const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
-      const imgW = canvas.width * ratio;
-      const imgH = canvas.height * ratio;
-      const x = (pageW - imgW) / 2;
-
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', x, 0, imgW, imgH);
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 0, 0, 210, 297);
       pdf.save(`${this.nombreArchivo}.pdf`);
     } finally {
       el.classList.remove('exportando');

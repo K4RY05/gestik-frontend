@@ -353,5 +353,12 @@
     </div>
   </div>
 </form>
+<app-delivery-pdf
+  [datos]="pdfDatos"
+  [empleados]="listaEmpleados"
+  [sucursales]="sucursales"
+  [autoDescargar]="true"
+  (cerrar)="pdfDatos = null">
+</app-delivery-pdf>
 
 <app-footer></app-footer>

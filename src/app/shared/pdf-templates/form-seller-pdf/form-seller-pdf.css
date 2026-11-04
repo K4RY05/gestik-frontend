@@ -15,12 +15,12 @@
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(15, 23, 42, .65);
   display: flex; justify-content: center;
-  overflow-y: auto; padding: 24px 12px;
+  overflow: auto; padding: 24px 12px;
 }
-.panel { width: 100%; max-width: 820px; }
+.panel { width: fit-content; min-width: 794px; max-width: none; margin: 0 auto; }
 
 .toolbar {
-  position: sticky; top: 0; z-index: 2;
+  position: sticky; top: 0; z-index: 2; box-sizing: border-box;
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
   background: #fff; padding: 10px 16px; border-radius: 10px;
   margin-bottom: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.18);
@@ -36,32 +36,42 @@
 .btn-pdf { background: var(--naranja); color: #fff; }
 .btn-cerrar { background: #e5e7eb; color: var(--texto); }
 
-/* ---------- Hoja (una sola página A4) ---------- */
+/* ---------- Hoja (una sola página A4, alto fijo) ---------- */
 .hoja {
   position: relative; box-sizing: border-box;
   display: flex; flex-direction: column;
   width: 794px;                    /* A4 a 96 dpi */
-  min-height: 1123px;
-  max-width: 100%; margin: 0 auto;
+  height: 1123px;                  /* alto fijo: una sola hoja */
+  flex-shrink: 0; margin: 0 auto;
   background: #fff; color: var(--texto);
   font-family: 'Segoe UI', Roboto, Arial, sans-serif;
   font-size: 10.5px; line-height: 1.35;
-  padding: 0 30px 0;
+  padding: 0 30px;
   border-radius: 4px; overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,.3);
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 
-/* Estado durante la exportación a PDF */
 .hoja.exportando {
-  width: 794px; min-height: 1123px;
-  max-width: none;
   box-shadow: none;
   border-radius: 0;
 }
 
+/* Zona entre la banda y el pie */
+.cuerpo {
+  flex: 1 1 0; min-height: 0;
+  overflow: hidden; position: relative;
+}
+.contenido {
+  display: flex; flex-direction: column;
+  transform-origin: top left;
+}
+/* Pago + políticas pegados abajo: el espacio libre queda debajo de los productos */
+.inferior { margin-top: auto; padding-top: 12px; }
+
 /* ---------- Banda superior ---------- */
 .banda {
+  flex: 0 0 auto;
   height: 12px; margin: 0 -30px 14px;
   background: linear-gradient(100deg,
     var(--azul) 0%, var(--azul-2) 70%,
@@ -172,7 +182,7 @@ table th.izq, table td.izq { text-align: left; }
 /* ---------- Pago ---------- */
 .pago {
   display: grid; grid-template-columns: 1fr 270px; gap: 14px;
-  margin-top: 12px; align-items: start;
+  margin-top: 0; align-items: start;
 }
 .pago-izq { display: flex; flex-direction: column; gap: 8px; }
 .fila-pago { display: flex; align-items: center; gap: 8px; }
@@ -194,7 +204,7 @@ table th.izq, table td.izq { text-align: left; }
 
 /* ---------- Políticas ---------- */
 .politicas {
-  margin-top: 12px; padding: 8px 12px; font-size: 9px; line-height: 1.35;
+  margin-top: 12px; margin-bottom: 12px; padding: 8px 12px; font-size: 9px; line-height: 1.35;
   background: var(--fondo-suave); border: 1px solid var(--linea);
   border-left: 5px solid var(--naranja); border-radius: 6px;
 }
@@ -207,13 +217,13 @@ table th.izq, table td.izq { text-align: left; }
 .politicas .pol-poliza { margin-top: 4px; }
 .politicas .enlace { color: var(--azul-2); font-weight: 600; text-decoration: underline; word-break: break-all; }
 
-/* ---------- Contacto (pegado al fondo de la hoja) ---------- */
+/* ---------- Contacto (siempre al fondo) ---------- */
 .contacto {
+  flex: 0 0 auto;
   display: flex; justify-content: space-between; gap: 10px;
-  margin: auto -30px 0; padding: 10px 30px;
+  margin: 0 -30px; padding: 10px 30px;
   background: linear-gradient(90deg, var(--azul), var(--azul-2)); color: #fff;
 }
-.politicas + .contacto { margin-top: 14px; }
 .c-item {
   display: flex; align-items: center; gap: 9px;
   color: #fff; text-decoration: none; font-size: 10.5px; line-height: 1.35;
@@ -224,9 +234,3 @@ table th.izq, table td.izq { text-align: left; }
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .c-ico svg { width: 15px; height: 15px; fill: #fff; }
-
-/* ---------- Móvil (solo vista previa) ---------- */
-@media (max-width: 640px) {
-  .cliente, .pago { grid-template-columns: 1fr; }
-  .h-head { flex-direction: column; align-items: flex-start; }
-}

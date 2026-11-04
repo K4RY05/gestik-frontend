@@ -380,10 +380,9 @@
   </div>
 </form>
 <app-form-seller-pdf
-  *ngIf="verPdf"
   [datos]="datosPdf"
-  [empleados]="listaEmpleados"
-  (cerrar)="verPdf = false">
+  [autoDescargar]="true"
+  (cerrar)="datosPdf = null">
 </app-form-seller-pdf>
 
 <app-footer></app-footer>

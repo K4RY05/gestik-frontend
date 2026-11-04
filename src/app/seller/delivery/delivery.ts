@@ -7,13 +7,14 @@ import {
 import { Navbar } from '../../shared/navbar/navbar';
 import { Footer } from '../../shared/footer/footer';
 import { Router } from '@angular/router';
+import { DeliveryPdf } from '../../shared/pdf-templates/delivery-pdf/delivery-pdf'; // ajusta la ruta a donde quedó tu componente
 
 type Seccion = 'venta' | 'cliente' | 'entrega' | 'productos' | 'pago';
 
 interface Pendiente {
   label: string;
   seccion: Seccion;
-  id: string; // id del elemento HTML al que se salta
+  id: string; 
 }
 
 interface Totales {
@@ -104,7 +105,7 @@ function validarEstatus(f: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-delivery',
-  imports: [CommonModule, Navbar, Footer, ReactiveFormsModule],
+  imports: [CommonModule, Navbar, Footer, ReactiveFormsModule, DeliveryPdf],
   styleUrl: './delivery.css',
   templateUrl: './delivery.html',
 })
@@ -117,6 +118,9 @@ export class Delivery implements OnInit {
   progreso = 0;
   totales: Totales = calcularTotales({});
 
+  /** Datos que se le pasan al PDF; null = vista previa cerrada. */
+  pdfDatos: any = null;
+
   readonly hoy = this.fechaISO();
 
   // Catálogos
@@ -126,7 +130,7 @@ export class Delivery implements OnInit {
     { id: 3, nombre: 'Ana Gómez' }
   ];
 
-  /** Sucursales. Si quieres que se muestren dirección y teléfono al elegirla, llénalos aquí. */
+  /** Sucursales. Si quieres que se muestren dirección y teléfono al elegirla (y en el PDF), llénalos aquí. */
   readonly sucursales = [
     { nombre: 'Texcoco', direccion: '', telefono: '' },
     { nombre: 'Plutarco', direccion: '', telefono: '' }
@@ -556,6 +560,20 @@ export class Delivery implements OnInit {
   // ==========================================
   // ACCIONES
   // ==========================================
+
+  /** Datos del formulario ya depurados: solo filas completas y totales calculados. */
+  private armarDatos(): any {
+    return {
+      ...this.registroForm.getRawValue(),
+      productos: this.productos.value.filter((r: any) => n(r.cantidad) > 0 && String(r.descripcion ?? '').trim()),
+      // Montos ya normalizados (el envío queda en 0 si la entrega es en sucursal)
+      descuento: this.totales.descuento,
+      envio: this.totales.envio,
+      anticipo: this.totales.anticipo,
+      totales: this.totales
+    };
+  }
+
   guardar(): void {
     this.intentoEnvio = true;
     this.guardadoOk = false;
@@ -567,12 +585,7 @@ export class Delivery implements OnInit {
       return;
     }
 
-    const datosFinales = {
-      ...this.registroForm.getRawValue(),
-      // Solo las filas completas, y los totales ya calculados
-      productos: this.productos.value.filter((r: any) => n(r.cantidad) > 0 && String(r.descripcion ?? '').trim()),
-      totales: this.totales
-    };
+    const datosFinales = this.armarDatos();
     console.log('Formato de entrega listo para enviar a la base de datos:', datosFinales);
 
     this.recordar(datosFinales);
@@ -589,14 +602,29 @@ export class Delivery implements OnInit {
     this.registroForm.reset(this.valoresBase());
     this.actualizarCondicionales();
 
+    this.pdfDatos = null;
     this.intentoEnvio = false;
     this.guardadoOk = false;
     this.recalcular();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /** Abre la vista previa del PDF. Si faltan datos, muestra los pendientes como en Guardar. */
   imprimir(): void {
-    window.print();
+    this.intentoEnvio = true;
+    this.recalcular();
+
+    if (this.registroForm.invalid) {
+      this.registroForm.markAllAsTouched();
+      this.irAlSiguiente();
+      return;
+    }
+
+    this.pdfDatos = this.armarDatos();
+  }
+
+  cerrarPdf(): void {
+    this.pdfDatos = null;
   }
 
   goToMain(): void {
